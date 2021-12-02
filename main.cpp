@@ -155,9 +155,10 @@ struct Shelf : public sf::Drawable {
         contents.push_back(Desire(i, 1));
     }
 
-    ~Shelf(){}
-    Shelf(const Shelf& s): contents(s.contents), tilePosition(s.tilePosition), shape(s.shape) {}
-    Shelf &operator=(const Shelf &s){
+    ~Shelf() {}
+    Shelf(const Shelf &s)
+        : contents(s.contents), tilePosition(s.tilePosition), shape(s.shape) {}
+    Shelf &operator=(const Shelf &s) {
         this->contents = s.contents;
         this->tilePosition = s.tilePosition;
         this->shape = s.shape;
@@ -569,15 +570,14 @@ struct Customer : public PersonWithDesire {
         return wander;
     }
 
+    /*
+     * As the customer, now that we are near our goal shelf,
+     * find the one we are trying to reach and remove the items from it
+     * and put it in our pocket
+     * */
     void run_shelf_action(vec2f pos) {
-        /*
-         * As the customer, now that we are near our goal shelf,
-         * find the one we are trying to reach and remove the items from it
-         * and put it in our pocket
-         * */
         auto matching_shelf = shelves.end();
         auto matching_desire = shelves[0]->contents.end();
-
         for (auto it = shelves.begin(); it != shelves.end(); it++) {
             if (dist(pos, (*it)->tilePosition) < PLAYER_TILE_REACH) continue;
 
@@ -592,9 +592,8 @@ struct Customer : public PersonWithDesire {
             matching_shelf = it;
             matching_desire = itt;
         }
-
         if (matching_shelf == shelves.end()) {
-            log("no shelf within reach has our item");
+            // log("no shelf within reach has our item");
             // welp lets give up,
             desireIndex = -1;
             return;
