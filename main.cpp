@@ -103,8 +103,6 @@ struct Item : public sf::Drawable {
         return *this;
     }
 
-    Item(std::string n, double p) : name(n), price(p) {}
-
     bool operator<(const Item &i) const { return this->name < i.name; }
 
     void update(sf::Time dt) {}
