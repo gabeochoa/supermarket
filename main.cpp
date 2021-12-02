@@ -84,8 +84,11 @@ struct Item : public sf::Drawable {
     vec2f tilePosition;
     sf::Color color;
 
+    Item(std::string n, double p) : name(n), price(p) {}
     Item(std::string n, double p, sf::Color c) : name(n), price(p), color(c) {}
+
     ~Item() {}
+
     Item(const Item &i)
         : name(i.name),
           price(i.price),
@@ -152,6 +155,15 @@ struct Shelf : public sf::Drawable {
         shape = sf::RectangleShape(vec2f{GRID_SIZEF, GRID_SIZEF});
         shape.setFillColor(sf::Color(150, 150, 150));
         contents.push_back(Desire(i, 1));
+    }
+
+    ~Shelf(){}
+    Shelf(const Shelf& s): contents(s.contents), tilePosition(s.tilePosition), shape(s.shape) {}
+    Shelf &operator=(const Shelf &s){
+        this->contents = s.contents;
+        this->tilePosition = s.tilePosition;
+        this->shape = s.shape;
+        return *this;
     }
 
     void setTile(vec2f tile_pos) {
@@ -345,15 +357,18 @@ const std::vector<sf::Color> PCOLORS = std::vector<sf::Color>{
 };
 
 struct Person : public sf::Drawable {
+    const std::vector<sf::Color> PCOLORS = std::vector<sf::Color>{
+        sf::Color(46, 20, 0),  sf::Color(66, 28, 0),     sf::Color(86, 37, 0),
+        sf::Color(164, 70, 0), sf::Color(255, 229, 180),
+    };
+
     sf::RectangleShape shape;
     vec2f tilePosition;
 
     Person() {
         random_selector<> rs{};
-        auto color = rs(PCOLORS);
-
         shape = sf::RectangleShape(vec2f{GRID_SIZEF / 2, GRID_SIZEF / 2});
-        shape.setFillColor(color);
+        shape.setFillColor(rs(PCOLORS));
     }
 
     void setFillColor(sf::Color c) { shape.setFillColor(c); }
