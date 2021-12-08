@@ -1,6 +1,8 @@
 
 
 #pragma once
+
+#include <cstdint>
 //
 #include "pch.hpp"
 //
@@ -51,11 +53,31 @@ struct Renderer3D {
 };
 
 struct Renderer {
+    struct QuadVert {
+        glm::vec3 position;
+        glm::vec2 texCoord;
+        glm::vec4 color;
+        float textureIndex;
+        float tilingFactor;
+    };
+
     struct SceneData {
+        // per draw call, before forced flush 🚽
+        const int MAX_QUADS = 100;
+        const int MAX_VERTS = MAX_QUADS * 4;
+        const int MAX_IND = MAX_QUADS * 6;
+
+        int quadCount = 0;
+
+        QuadVert* qvBufferStart = nullptr;
+        QuadVert* qvBufferPtr = nullptr;
+
         glm::mat4 viewProjection;
 
         std::shared_ptr<VertexArray> vertexArray;
+        std::shared_ptr<VertexBuffer> vertexBuffer;
         ShaderLibrary shaderLibrary;
+        TextureLibrary textureLibrary;
     };
 
     static SceneData* sceneData;
@@ -65,35 +87,51 @@ struct Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
 
-        std::shared_ptr<VertexBuffer> squareVB;
-        std::shared_ptr<IndexBuffer> squareIB;
         sceneData->vertexArray.reset(VertexArray::create());
+        sceneData->vertexBuffer.reset(
+            VertexBuffer::create(sceneData->MAX_VERTS * sizeof(QuadVert)));
 
-        // float squareVerts[] = {
-        // 0.f, 0.f, 0.f,  //
-        // 1.f, 0.f, 0.f,  //
-        // 1.f, 1.f, 0.f,  //
-        // 0.f, 1.f, 0.f,  //
-        // };
-        float squareVerts[5 * 4] = {
-            0.f, 0.f, 0.f, 0.0f, 0.0f,  //
-            1.f, 0.f, 0.f, 1.0f, 0.0f,  //
-            1.f, 1.f, 0.f, 1.0f, 1.0f,  //
-            0.f, 1.f, 0.f, 0.0f, 1.0f,  //
-        };
-        squareVB.reset(VertexBuffer::create(squareVerts, sizeof(squareVerts)));
-        squareVB->setLayout(BufferLayout{
+        sceneData->vertexBuffer->setLayout(BufferLayout{
             {"i_pos", BufferType::Float3},
             {"i_texcoord", BufferType::Float2},
+            {"i_color", BufferType::Float4},
+            {"i_texindex", BufferType::Float},
+            {"i_tilingfactor", BufferType::Float},
         });
-        sceneData->vertexArray->addVertexBuffer(squareVB);
+        sceneData->vertexArray->addVertexBuffer(sceneData->vertexBuffer);
 
-        unsigned int squareIs[] = {0, 1, 2, 0, 2, 3};
-        squareIB.reset(IndexBuffer::create(squareIs, 6));
+        sceneData->qvBufferStart = new QuadVert[sceneData->MAX_QUADS];
+
+        uint32_t* squareIs = new uint32_t[sceneData->MAX_IND];
+        int offset = 0;
+        for (int i = 0; i < sceneData->MAX_IND; i += 6) {
+            squareIs[i + 0] = offset + 0;
+            squareIs[i + 1] = offset + 1;
+            squareIs[i + 2] = offset + 2;
+
+            squareIs[i + 3] = offset + 2;
+            squareIs[i + 4] = offset + 3;
+            squareIs[i + 5] = offset + 0;
+
+            offset += 4;
+        }
+
+        std::shared_ptr<IndexBuffer> squareIB;
+        squareIB.reset(IndexBuffer::create(squareIs, sceneData->MAX_IND));
         sceneData->vertexArray->setIndexBuffer(squareIB);
+        delete[] squareIs;
 
         sceneData->shaderLibrary.load("./engine/shaders/flat.glsl");
         sceneData->shaderLibrary.load("./engine/shaders/texture.glsl");
+
+        std::shared_ptr<Texture> whiteTexture =
+            std::make_shared<Texture2D>("white", 1, 1, 0);
+        unsigned int data = 0xffffffff;
+        whiteTexture->setData(&data);
+        sceneData->textureLibrary.add(whiteTexture);
+
+        sceneData->textureLibrary.load("./resources/face.png", 1);
+        sceneData->textureLibrary.load("./resources/screen.png", 2);
     }
 
     static void resize(int width, int height) {
@@ -102,22 +140,49 @@ struct Renderer {
 
     static void begin(OrthoCamera& cam) {
         prof(__PROFILE_FUNC__);
-        sceneData->viewProjection = cam.viewProjection;
 
-        auto flatShader = sceneData->shaderLibrary.get("flat");
-        flatShader->bind();
-        flatShader->uploadUniformMat4("viewProjection",
-                                      sceneData->viewProjection);
+        sceneData->viewProjection = cam.viewProjection;
+        start_batch();
+    }
+
+    static void start_batch() {
+        sceneData->quadCount = 0;
+        sceneData->qvBufferPtr = sceneData->qvBufferStart;
+    }
+
+    static void next_batch() {
+        flush();
+        start_batch();
+    }
+
+    static void end() {
+        prof(__PROFILE_FUNC__);
+        flush();
+    }
+
+    static void flush() {
+        // Nothing to draw
+        if (sceneData->quadCount == 0) return;
+
+        uint32_t dataSize = (uint32_t)((uint8_t*)sceneData->qvBufferPtr -
+                                       (uint8_t*)sceneData->qvBufferStart);
+        sceneData->vertexBuffer->setData(sceneData->qvBufferStart, dataSize);
+
+        // for (auto& tex : sceneData->textureLibrary) {
+        // tex.second->bind();
+        // }
 
         auto textureShader = sceneData->shaderLibrary.get("texture");
         textureShader->bind();
         textureShader->uploadUniformMat4("viewProjection",
                                          sceneData->viewProjection);
+        Renderer::draw(sceneData->vertexArray, sceneData->quadCount);
     }
 
-    static void end() { prof(__PROFILE_FUNC__); }
-
-    static void shutdown() { delete sceneData; }
+    static void shutdown() {
+        delete[] sceneData->qvBufferStart;
+        delete sceneData;
+    }
 
     static void clear(const glm::vec4& color) {
         prof(__PROFILE_FUNC__);
@@ -126,13 +191,61 @@ struct Renderer {
                 GL_DEPTH_BUFFER_BIT);  // Clear the buffers
     }
 
-    static void draw(const std::shared_ptr<VertexArray>& vertexArray) {
+    static void draw(const std::shared_ptr<VertexArray>& vertexArray,
+                     unsigned int count = 0) {
         prof(__PROFILE_FUNC__);
-        glDrawElements(GL_TRIANGLES, vertexArray->indexBuffer->getCount(),
-                       GL_UNSIGNED_INT, nullptr);
+        auto c = count ? count : vertexArray->indexBuffer->getCount();
+        glDrawElements(GL_TRIANGLES, c, GL_UNSIGNED_INT, nullptr);
     }
-    static void drawQuad(const glm::mat4& transform, const glm::vec4& color,
-                         const std::shared_ptr<Texture>& texture = nullptr) {
+
+    static void drawQuad(const glm::mat4& transform,  //
+                         const glm::vec4& color,      //
+                         const std::string& texturename) {
+        prof(__PROFILE_FUNC__);
+
+        if (sceneData->quadCount >= sceneData->MAX_IND) {
+            next_batch();
+        }
+
+        const glm::vec2 textureCoords[] = {
+            {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
+
+        const glm::vec4 vertexPos[] = {{-0.5f, -0.5f, 0.0f, 1.0f},
+                                       {0.5f, -0.5f, 0.0f, 1.0f},
+                                       {0.5f, 0.5f, 0.0f, 1.0f},
+                                       {-0.5f, 0.5f, 0.0f, 1.0f}};
+
+        // use the default white texture if none supplied
+        auto texture = sceneData->textureLibrary.get(texturename);
+        int texIndex = texture == nullptr ? 0 : texture->textureIndex;
+        if (texture == nullptr) {
+            log_warn(fmt::format("Texture : {} is missing", texturename));
+        }
+
+        for (int i = 0; i < 4; i++) {
+            sceneData->qvBufferPtr->position = transform * vertexPos[i];
+            sceneData->qvBufferPtr->color = color;
+            sceneData->qvBufferPtr->texCoord = textureCoords[i];
+            sceneData->qvBufferPtr->textureIndex = texIndex;
+            sceneData->qvBufferPtr->tilingFactor = 1.0f;
+            sceneData->qvBufferPtr++;
+        }
+        sceneData->quadCount += 6;
+    }
+
+    static void drawQuadRotated(const glm::vec3& position,
+                                const glm::vec2& size, float angleInRad,
+                                const glm::vec4& color,
+                                const std::string& texturename) {
+        prof(__PROFILE_FUNC__);
+
+        auto transform =
+            glm::translate(glm::mat4(1.f), position) *
+            glm::rotate(glm::mat4(1.f), angleInRad, {0.0f, 0.0f, 1.f}) *
+            glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+
+        auto texture = sceneData->textureLibrary.get(texturename);
+
         if (texture == nullptr) {
             auto flatShader = sceneData->shaderLibrary.get("flat");
             flatShader->bind();
@@ -155,45 +268,39 @@ struct Renderer {
         Renderer::draw(sceneData->vertexArray);
     }
 
-    static void drawQuad(const glm::vec3& position, const glm::vec2& size,
-                         const glm::vec4& color,
-                         const std::shared_ptr<Texture>& texture = nullptr) {
-        prof(__PROFILE_FUNC__);
-        auto transform = glm::translate(glm::mat4(1.f), position) *
-                         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
-        drawQuad(transform, color, texture);
-    }
-
-    static void drawQuadRotated(
-        const glm::vec3& position, const glm::vec2& size, float angleInRad,
-        const glm::vec4& color,
-        const std::shared_ptr<Texture>& texture = nullptr) {
-        prof(__PROFILE_FUNC__);
-
-        auto transform =
-            glm::translate(glm::mat4(1.f), position) *
-            glm::rotate(glm::mat4(1.f), angleInRad, {0.0f, 0.0f, 1.f}) *
-            glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
-
-        drawQuad(transform, color, texture);
-    }
-
     ////// ////// ////// ////// ////// ////// ////// //////
     //      the draw quads below here, just call one of the ones above
     ////// ////// ////// ////// ////// ////// ////// //////
 
-    static void drawQuad(const glm::vec2& position, const glm::vec2& size,
-                         const glm::vec4& color,
-                         const std::shared_ptr<Texture>& texture = nullptr) {
-        Renderer::drawQuad(glm::vec3{position.x, position.y, 0.f}, size, color,
-                           texture);
+    static void drawQuad(const glm::vec3& position,                 //
+                         const glm::vec2& size,                     //
+                         const glm::vec4& color,                    //
+                         const std::string& texture_name = "white"  //
+
+    ) {
+        auto transform = glm::translate(glm::mat4(1.f), position) *
+                         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+        drawQuad(transform, color, texture_name);
     }
 
-    static void drawQuadRotated(
-        const glm::vec2& position, const glm::vec2& size, float angleInRad,
-        const glm::vec4& color,
-        const std::shared_ptr<Texture>& texture = nullptr) {
-        Renderer::drawQuadRotated(glm::vec3{position.x, position.y, 0.f}, size,
-                                  angleInRad, color, texture);
+    static void drawQuad(const glm::vec2& position, const glm::vec2& size,
+                         const glm::vec4& color,
+                         const std::string& texturename = "white") {
+        Renderer::drawQuad(glm::vec3{position.x, position.y, 0.f}, size, color,
+                           texturename);
+    }
+
+    static void drawQuadRotated(const glm::vec2& position,
+                                const glm::vec2& size,  //
+                                float angleInRad,       //
+                                const glm::vec4& color,
+                                const std::string& texturename = "white") {
+        Renderer::drawQuadRotated(                   //
+            glm::vec3{position.x, position.y, 0.f},  //
+            size,                                    //
+            angleInRad,                              //
+            color,                                   //
+            texturename                              //
+        );
     }
 };

@@ -120,6 +120,25 @@ struct TextureLibrary {
         return texture;
     }
 
+    std::unordered_map<std::string, std::shared_ptr<Texture>>::iterator
+    begin() {
+        return textures.begin();
+    }
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>>::iterator end() {
+        return textures.end();
+    }
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>>::const_iterator
+    begin() const {
+        return textures.begin();
+    }
+
+    std::unordered_map<std::string, std::shared_ptr<Texture>>::const_iterator
+    end() const {
+        return textures.end();
+    }
+
     std::shared_ptr<Texture> get(const std::string &name) {
         return textures[name];
     }

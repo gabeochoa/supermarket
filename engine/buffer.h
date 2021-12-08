@@ -4,17 +4,17 @@
 
 enum class BufferType {
     None = 0,
-    Float,
-    Float2,
-    Float3,
-    Float4,
-    Mat3,
-    Mat4,
-    Int,
-    Int2,
-    Int3,
-    Int4,
-    Bool
+    Float = 1,
+    Float2 = 2,
+    Float3 = 3,
+    Float4 = 4,
+    Mat3 = 5,
+    Mat4 = 6,
+    Int = 7,
+    Int2 = 8,
+    Int3 = 9,
+    Int4 = 10,
+    Bool = 11
 };
 
 struct BufferElem {
@@ -42,6 +42,8 @@ struct BufferElem {
             case BufferType::Mat3:
             case BufferType::Mat4:
                 return GL_FLOAT;
+            case BufferType::Int:
+                return GL_UNSIGNED_INT;
             default:
                 log_error(fmt::format("Missing type conversion for {}", type));
                 return GL_FLOAT;
@@ -50,6 +52,7 @@ struct BufferElem {
 
     inline int getDataTypeSize(BufferType t) const {
         switch (t) {
+            case BufferType::Int:
             case BufferType::Float:
                 return 4;
             case BufferType::Float2:
@@ -74,7 +77,9 @@ struct BufferElem {
         switch (type) {
             case BufferType::Bool:
             case BufferType::Float:
+            case BufferType::Int:
                 return 1;
+            case BufferType::Int2:
             case BufferType::Float2:
                 return 2;
             case BufferType::Float3:
@@ -127,7 +132,9 @@ struct VertexBuffer {
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
     virtual void setLayout(const BufferLayout& l) = 0;
+    virtual void setData(const void* data, unsigned int size) = 0;
     static VertexBuffer* create(float* verts, int size);
+    static VertexBuffer* create(int size);
 };
 
 struct IndexBuffer {
@@ -196,12 +203,23 @@ struct OpenGLVertexBuffer : public VertexBuffer {
         glBindBuffer(GL_ARRAY_BUFFER, rendererID);
         glBufferData(GL_ARRAY_BUFFER, size, verts, GL_STATIC_DRAW);
     }
+
+    OpenGLVertexBuffer(unsigned int size) {
+        glGenBuffers(1, &rendererID);
+        glBindBuffer(GL_ARRAY_BUFFER, rendererID);
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_STATIC_DRAW);
+    }
+
     virtual ~OpenGLVertexBuffer() { glDeleteBuffers(1, &rendererID); }
     virtual void bind() const override {
         glBindBuffer(GL_ARRAY_BUFFER, rendererID);
     }
     virtual void unbind() const override { glBindBuffer(GL_ARRAY_BUFFER, 0); }
     virtual void setLayout(const BufferLayout& l) override { layout = l; }
+    virtual void setData(const void* data, unsigned int size) override {
+        glBindBuffer(GL_ARRAY_BUFFER, rendererID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+    }
 };
 
 struct OpenGLIndexBuffer : public IndexBuffer {
@@ -214,6 +232,7 @@ struct OpenGLIndexBuffer : public IndexBuffer {
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(unsigned int), i_s,
                      GL_STATIC_DRAW);
     }
+
     virtual ~OpenGLIndexBuffer() { glDeleteBuffers(1, &rendererID); }
     virtual void bind() const override {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID);

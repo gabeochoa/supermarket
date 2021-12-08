@@ -14,18 +14,7 @@ struct SuperLayer : public Layer {
 
     OrthoCameraController cameraController;
 
-    SuperLayer() : Layer("Supermarket"), cameraController(WIN_RATIO, true) {
-        std::shared_ptr<Texture> whiteTexture =
-            std::make_shared<Texture2D>("white", 1, 1, 0);
-        unsigned int data = 0xffffffff;
-        whiteTexture->setData(&data);
-        textureLibrary.add(whiteTexture);
-
-        textureLibrary.load("./resources/face.png", 1);
-        textureLibrary.get("face")->tilingFactor = 3.f;
-
-        textureLibrary.load("./resources/screen.png", 2);
-    }
+    SuperLayer() : Layer("Supermarket"), cameraController(WIN_RATIO, true) {}
 
     virtual ~SuperLayer() {}
     virtual void onAttach() override {}
@@ -41,15 +30,26 @@ struct SuperLayer : public Layer {
         Renderer::clear(/* color */ {0.1f, 0.1f, 0.1f, 1.0f});
         Renderer::begin(cameraController.camera);
 
-        Renderer::drawQuadRotated(
-            glm::vec2{0.f, 0.f}, glm::vec2{1.f, 1.f}, glm::radians(45.f),
-            glm::vec4{1.0f, 1.0f, 1.0f, 1.0f}, textureLibrary.get("face"));
+        Renderer::drawQuad(glm::vec2{0.f, 0.f},                // position
+                           glm::vec2{1.f, 1.f},                // scale
+                           glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},  // color
+                           "face"                              // texture
+        );
 
-        Renderer::drawQuad(glm::vec2{0.5f, 1.f}, glm::vec2{0.8f, 0.8f},
-                           glm::vec4{0.5f, 0.4f, 0.2f, 1.0f});
+        Renderer::drawQuad(glm::vec2{0.5f, 1.f},              // position
+                           glm::vec2{0.8f, 0.8f},             // scale
+                           glm::vec4{0.5f, 0.4f, 0.2f, 1.0f}  // color
+        );
 
-        Renderer::drawQuad(glm::vec2{-0.5f, -1.f}, glm::vec2{1.1f, 1.1f},
-                           glm::vec4{0.2f, 0.7f, 0.0f, 1.0f});
+        // Renderer::drawQuadRotated(
+        // glm::vec2{0.f, 0.f}, glm::vec2{1.f, 1.f}, glm::radians(45.f),
+        // glm::vec4{1.0f, 1.0f, 1.0f, 1.0f}, textureLibrary.get("face"));
+        //
+
+        Renderer::drawQuad(glm::vec2{-0.5f, -1.f},            // position
+                           glm::vec2{1.1f, 1.1f},             // scale
+                           glm::vec4{0.2f, 0.7f, 0.0f, 1.0f}  // color
+        );
 
         Renderer::end();
     }
