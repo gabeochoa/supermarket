@@ -9,10 +9,7 @@
     uniform mat4 viewProjection;
     uniform mat4 transformMatrix;
 
-    out vec3 o_pos;
-
     void main(){
-        o_pos = i_pos;
         gl_Position = viewProjection * transformMatrix * vec4(i_pos, 1.0);
     }
 

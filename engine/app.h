@@ -57,6 +57,7 @@ struct App {
 
         window->setEventCallback(M_BIND(onEvent));
 
+        Renderer::resize(settings.width, settings.height);
         Renderer::init();
     }
 
@@ -116,7 +117,8 @@ struct App {
             prof(__PROFILE_FUNC__);
             time.end();
             if (isMinimized) continue;
-            if (clearEnabled) Renderer::clear(/* color */ {0.1f, 0.1f, 0.1f, 1.0f});
+            if (clearEnabled)
+                Renderer::clear(/* color */ {0.1f, 0.1f, 0.1f, 1.0f});
             for (Layer* layer : layerstack) {
                 layer->onUpdate(time);
             }
