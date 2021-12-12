@@ -86,7 +86,7 @@ struct ProfileLayer : public Layer {
             return;
         }
 
-        int y = 10;
+        int y = 0;
         float scale = 1.f;
         gltInit();
         gltBeginDraw();
@@ -106,8 +106,27 @@ struct ProfileLayer : public Layer {
                 drawText(fmt::format("{}{}: avg: {:.2f}ns",
                                      showFilenames ? stats.filename : "",
                                      x.first, stats.average()),
-                         10, y, scale));
-            y += 30;
+                         10, (y++) * 30, scale));
+        }
+
+        {
+            auto stats = Renderer::stats();
+            texts.push_back(
+                drawText(fmt::format("Draw Calls {}", stats.drawCalls), 10,
+                         (y++) * 30, scale));
+            texts.push_back(
+                drawText(fmt::format("Quad Count {}", stats.quadCount), 10,
+                         (y++) * 30, scale));
+            texts.push_back(
+                drawText(fmt::format("Vert Count {}", stats.vertCount()), 10,
+                         (y++) * 30, scale));
+            texts.push_back(
+                drawText(fmt::format("Index Count {}", stats.indexCount()), 10,
+                         (y++) * 30, scale));
+            texts.push_back(
+                drawText(fmt::format("Avg Rendertime {} ({} fps) ",
+                                     stats.renderTime(), stats.fps()),
+                         10, (y++) * 30, scale));
         }
 
         texts.push_back(

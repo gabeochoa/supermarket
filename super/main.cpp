@@ -70,6 +70,17 @@ struct SuperLayer : public Layer {
     virtual void onAttach() override {}
     virtual void onDetach() override {}
 
+    virtual void render() {
+        prof(__PROFILE_FUNC__);
+        Renderer::resetStats();
+        Renderer::begin(cameraController->camera);
+        for (auto& entity : entities) {
+            entity->render();
+        }
+        Renderer::end();
+        Renderer::calculateEndFrameStats();
+    }
+
     virtual void onUpdate(Time dt) override {
         log_trace(fmt::format("{:.2}s ({:.2} ms) ", dt.s(), dt.ms()));
         prof(__PROFILE_FUNC__);
@@ -79,15 +90,6 @@ struct SuperLayer : public Layer {
             entity->onUpdate(dt);
         }
 
-        Renderer::begin(cameraController->camera);
-
-        for (auto& entity : entities) {
-            entity->render();
-        }
-
-        Renderer::end();
-
-        //
         // if (JobQueue::numOfJobsWithType(JobType::IdleWalk) < 5) {
         // JobQueue::addJob(
         // JobType::IdleWalk,
@@ -97,6 +99,8 @@ struct SuperLayer : public Layer {
         // }
         // Cleanup all completed jobs
         JobQueue::cleanup();
+
+        render();
     }
 
     bool onMouseButtonPressed(Mouse::MouseButtonPressedEvent& e) {

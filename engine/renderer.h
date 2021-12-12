@@ -59,9 +59,46 @@ struct Renderer {
         std::shared_ptr<VertexArray> vertexArray;
         ShaderLibrary shaderLibrary;
         TextureLibrary textureLibrary;
+
+        struct Stats {
+            std::array<float, 100> renderTimes;
+            int frameCount = 0;
+            float frameBeginTime = 0.f;
+            float totalFrameTime = 0.0f;
+
+            int drawCalls = 0;
+            int quadCount = 0;
+            int vertCount() const { return quadCount * 4; }
+            int indexCount() const { return quadCount * 6; }
+
+            float renderTime() const {
+                return totalFrameTime / renderTimes.size();
+            }
+            float fps() const { return 1.f / renderTime(); }
+
+            void reset() {
+                drawCalls = 0;
+                quadCount = 0;
+            }
+
+        } stats;
     };
 
     static SceneData* sceneData;
+
+    static void resetStats() { sceneData->stats.reset(); }
+    static void calculateEndFrameStats() {
+        SceneData::Stats stats = Renderer::stats();
+        stats.renderTimes[stats.frameCount] =
+            (float)glfwGetTime() - stats.frameBeginTime;
+        stats.totalFrameTime += (stats.renderTimes[stats.frameCount] -
+                                 stats.renderTimes[(stats.frameCount + 1) %
+                                                   stats.renderTimes.size()]);
+        if (++stats.frameCount == stats.renderTimes.size())
+            stats.frameCount = 0;
+    }
+
+    static Renderer::SceneData::Stats& stats() { return sceneData->stats; }
 
     static void addTexture(const std::string& filepath, float tiling = 1.f) {
         auto tex = sceneData->textureLibrary.load(filepath, TEXTURE_INDEX);
@@ -111,6 +148,8 @@ struct Renderer {
 
     static void begin(OrthoCamera& cam) {
         prof(__PROFILE_FUNC__);
+        sceneData->stats.frameBeginTime = (float)glfwGetTime();
+
         sceneData->viewProjection = cam.viewProjection;
 
         auto flatShader = sceneData->shaderLibrary.get("flat");
@@ -137,8 +176,11 @@ struct Renderer {
 
     static void draw(const std::shared_ptr<VertexArray>& vertexArray) {
         prof(__PROFILE_FUNC__);
+
         glDrawElements(GL_TRIANGLES, vertexArray->indexBuffer->getCount(),
                        GL_UNSIGNED_INT, nullptr);
+
+        Renderer::stats().drawCalls++;
     }
     static void drawQuad(const glm::mat4& transform, const glm::vec4& color,
                          const std::string& textureName = DEFAULT_TEX) {
@@ -162,7 +204,10 @@ struct Renderer {
         }
 
         sceneData->vertexArray->bind();
+
         Renderer::draw(sceneData->vertexArray);
+
+        Renderer::stats().quadCount++;
     }
 
     static void drawQuad(const glm::vec3& position, const glm::vec2& size,
