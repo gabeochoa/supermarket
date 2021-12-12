@@ -9,3 +9,4 @@ windows_build/*
 *.d
 old/*
 *.tmp
+*.trace

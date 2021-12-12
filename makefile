@@ -45,4 +45,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 clean:
 	$(RM) $(OBJ_FILES) $(LIB_OBJ_FILES) $(DEPENDS) ${LIBRARY}
 
+gettrace:
+	rm -f super.exe.trace
+	../apitracedyld/build/apitrace trace --api gl $(EXE)
+
+viewtrace:
+	../apitrace/build/qapitrace super.exe.trace
+
 .PHONY: all clean

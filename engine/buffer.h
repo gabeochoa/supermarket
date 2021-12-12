@@ -127,7 +127,10 @@ struct VertexBuffer {
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
     virtual void setLayout(const BufferLayout& l) = 0;
+    virtual void setData(const void* data, uint32_t size) = 0;
+
     static VertexBuffer* create(float* verts, int size);
+    static VertexBuffer* create(int size);
 };
 
 struct IndexBuffer {
@@ -196,12 +199,24 @@ struct OpenGLVertexBuffer : public VertexBuffer {
         glBindBuffer(GL_ARRAY_BUFFER, rendererID);
         glBufferData(GL_ARRAY_BUFFER, size, verts, GL_STATIC_DRAW);
     }
+
+    OpenGLVertexBuffer(unsigned int size) {
+        glGenBuffers(1, &rendererID);
+        glBindBuffer(GL_ARRAY_BUFFER, rendererID);
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+    }
+
     virtual ~OpenGLVertexBuffer() { glDeleteBuffers(1, &rendererID); }
     virtual void bind() const override {
         glBindBuffer(GL_ARRAY_BUFFER, rendererID);
     }
     virtual void unbind() const override { glBindBuffer(GL_ARRAY_BUFFER, 0); }
     virtual void setLayout(const BufferLayout& l) override { layout = l; }
+
+    virtual void setData(const void* data, uint32_t size) override {
+        glBindBuffer(GL_ARRAY_BUFFER, rendererID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+    }
 };
 
 struct OpenGLIndexBuffer : public IndexBuffer {
