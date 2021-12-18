@@ -111,6 +111,7 @@ struct WidgetConfig {
     glm::vec2 size;
     glm::vec4 color = white;
     std::string texture = "white";
+
     bool transparent = false;
 
     WidgetConfig* child;
@@ -349,10 +350,6 @@ bool textfield(uuid id, glm::vec2 position, glm::vec2 size,
         }
         if (get()->keychar != Key::KeyCode()) {
             buffer.append(std::string(1, get()->keychar));
-            changed = true;
-        }
-        if (get()->modchar == Key::mapping["Text Space"]) {
-            buffer.append(" ");
             changed = true;
         }
         if (get()->modchar == Key::mapping["Text Backspace"]) {

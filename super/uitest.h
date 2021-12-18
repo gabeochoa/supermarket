@@ -140,6 +140,27 @@ struct UITestLayer : public Layer {
                           glm::vec2{3.f, 1.f}, content)) {
                 log_info("{}", content);
             }
+
+            auto textConfig = IUI::WidgetConfig({
+                .text = "Tap to continue",
+                .position = glm::vec2{0.f, 0.5f},          //
+                .size = glm::vec2{0.5f, 0.5f},             //
+                .color = glm::vec4{1.f, 1.0f, 1.0f, 1.f},  //
+            });
+
+            if (IUI::button_with_label(
+                    IUI::uuid({0, item++, 0}),
+                    IUI::WidgetConfig({
+                        .position = glm::vec2{12.f, 1.f},           //
+                        .size = glm::vec2{8.f, 1.f},                //
+                        .transparent = false,                       //
+                        .color = glm::vec4{0.3f, 0.9f, 0.5f, 1.f},  //
+                        .child = &textConfig,                       //
+                        .text = ""                                  //
+                    })                                              //
+                    )) {
+                Menu::get().state = Menu::State::UITest;
+            }
         }
 
         end();
@@ -155,7 +176,7 @@ struct UITestLayer : public Layer {
 
     virtual void onEvent(Event& event) override {
         // log_warn(event.toString().c_str());
-        if (Menu::get().state == Menu::State::Game) return;
+        if (Menu::get().state != Menu::State::UITest) return;
 
         uiTestCameraController->onEvent(event);
         EventDispatcher dispatcher(event);

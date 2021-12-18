@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     Layer* jobLayer = new JobLayer();
     App::get().pushLayer(jobLayer);
 
-    Menu::get().state = Menu::State::Root;
+    Menu::get().state = Menu::State::UITest;
 
     App::get().run();
 
