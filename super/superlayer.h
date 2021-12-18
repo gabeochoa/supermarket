@@ -11,7 +11,7 @@ struct SuperLayer : public Layer {
     SuperLayer() : Layer("Supermarket") {
         isMinimized = true;
 
-        cameraController.reset(new OrthoCameraController(WIN_RATIO, true));
+        cameraController.reset(new OrthoCameraController(WIN_RATIO));
 
         Renderer::addTexture("./resources/face.png");
         Renderer::addTexture("./resources/box.png");
