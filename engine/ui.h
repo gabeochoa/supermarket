@@ -41,7 +41,6 @@ struct UIContext {
     uuid lastProcessed;
 
     const std::set<Key::KeyCode> textfieldMod = {{
-        Key::mapping["Text Space"],
         Key::mapping["Text Backspace"],
     }};
     Key::KeyCode keychar;
@@ -104,17 +103,24 @@ bool isMouseInside(glm::vec4 rect) {
 // from http://sol.gfxile.net/imgui/
 // Like actually, I tried 3 times :)
 
+struct WidgetConfig;
+
 struct WidgetConfig {
     std::string text;
     glm::vec2 position;
     glm::vec2 size;
-    glm::vec4 color;
+    glm::vec4 color = white;
+    std::string texture = "white";
+    bool transparent = false;
+
+    WidgetConfig* child;
 };
 
 bool text(uuid id, WidgetConfig config, glm::vec2 offset = {0.f, 0.f}) {
     int i = 0;
     for (auto c : config.text) {
         i++;
+        log_warn("about to draw {}", c);
         Renderer::drawQuad(
             offset + config.position + glm::vec2{i * config.size.x, 0.f},
             config.size, config.color, std::string(1, c));
@@ -142,20 +148,27 @@ bool button(uuid id, WidgetConfig config) {
     try_to_grab_kb(id);
 
     {  // start render
-        Renderer::drawQuad(config.position, config.size, white, "white");
-        if (get()->hotID == id) {
-            if (get()->activeID == id) {
-                Renderer::drawQuad(config.position, config.size, red, "white");
+        if (!config.transparent) {
+            Renderer::drawQuad(config.position, config.size, config.color,
+                               config.texture);
+        }
+        if (false) {
+            if (get()->hotID == id) {
+                if (get()->activeID == id) {
+                    Renderer::drawQuad(config.position, config.size, red,
+                                       config.texture);
+                } else {
+                    Renderer::drawQuad(config.position, config.size, green,
+                                       config.texture);
+                }
             } else {
-                Renderer::drawQuad(config.position, config.size, green,
-                                   "white");
+                Renderer::drawQuad(config.position, config.size, blue,
+                                   config.texture);
             }
-        } else {
-            Renderer::drawQuad(config.position, config.size, blue, "white");
         }
         draw_if_kb_focus(id, [&]() {
             Renderer::drawQuad(config.position, config.size + glm::vec2{0.1f},
-                               teal, "white");
+                               teal, config.texture);
         });
     }  // end render
 
@@ -184,13 +197,12 @@ bool button(uuid id, WidgetConfig config) {
     return false;
 }
 
-bool slider(uuid id, glm::vec2 position, glm::vec2 size, float* value,
-            float mnf, float mxf) {
-    bool inside =
-        isMouseInside(glm::vec4{position.x, position.y, size.x, size.y});
+bool slider(uuid id, WidgetConfig config, float* value, float mnf, float mxf) {
+    bool inside = isMouseInside(glm::vec4{config.position.x, config.position.y,
+                                          config.size.x, config.size.y});
 
-    float min = position.y - size.y / 2.f;
-    float max = position.y + size.y / 2.f;
+    float min = config.position.y - config.size.y / 2.f;
+    float max = config.position.y + config.size.y / 2.f;
     float ypos = min + ((max - min) * (*value));
 
     if (inside) {
@@ -212,14 +224,15 @@ bool slider(uuid id, glm::vec2 position, glm::vec2 size, float* value,
 
     // everything is drawn from the center so move it so its not the center that
     // way the mouse collision works
-    auto pos =
-        glm::vec2{position.x + (size.x / 2.f), position.y + (size.y / 2.f)};
+    auto pos = glm::vec2{config.position.x + (config.size.x / 2.f),
+                         config.position.y + (config.size.y / 2.f)};
     Renderer::drawQuad(pos + glm::vec2{0.f, ypos}, glm::vec2{0.5f}, col,
-                       "white");
-    Renderer::drawQuad(pos, size, red, "white");
+                       config.texture);
+    Renderer::drawQuad(pos, config.size, red, config.texture);
 
     draw_if_kb_focus(id, [&]() {
-        Renderer::drawQuad(position, size + glm::vec2{0.1f}, teal, "white");
+        Renderer::drawQuad(config.position, config.size + glm::vec2{0.1f}, teal,
+                           config.texture);
     });
 
     // all drawing has to happen before this ///
@@ -248,7 +261,7 @@ bool slider(uuid id, glm::vec2 position, glm::vec2 size, float* value,
 
     if (get()->activeID == id) {
         get()->kbFocusID = id;
-        float v = (position.y - get()->mousePosition.y) / size.y;
+        float v = (config.position.y - get()->mousePosition.y) / config.size.y;
         if (v < mnf) v = mnf;
         if (v > mxf) v = mxf;
         if (v != *value) {
@@ -257,6 +270,13 @@ bool slider(uuid id, glm::vec2 position, glm::vec2 size, float* value,
         }
     }
     return false;
+}
+
+bool button_with_label(uuid id, WidgetConfig config) {
+    int item = 0;
+    text(uuid({id.item, item++, 0}), *config.child, config.position);
+    auto pressed = button(id, config);
+    return pressed;
 }
 
 bool textfield(uuid id, glm::vec2 position, glm::vec2 size,

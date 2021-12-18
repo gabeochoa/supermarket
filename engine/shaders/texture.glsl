@@ -44,6 +44,6 @@
         
         vec4 inter = texture(u_textures[int(v_texindex)], v_texcoord * v_tilingfactor);
         // hide anything with basically no alpha
-        if(inter.a < 0.01){ discard; }
+        // if(inter.a < 0.01){ discard; }
         frag_color = inter * v_color;
     }

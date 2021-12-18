@@ -16,8 +16,8 @@ struct MenuLayer : public Layer {
 
     MenuLayer() : Layer("Supermarket") {
         menuCameraController.reset(
-            new OrthoCameraController(WIN_RATIO, true, 10.f, 0.f, 0.f));
-        menuCameraController->camera.setPosition(glm::vec3{15.f, 0.f, 0.f});
+            new OrthoCameraController(WIN_RATIO, 10.f, 0.f, 0.f));
+        menuCameraController->camera.setPosition(glm::vec3{0.f, 0.f, 0.f});
 
         Renderer::addTexture("./resources/letters.png");
         int a = 0;
@@ -80,22 +80,41 @@ struct MenuLayer : public Layer {
         gltTerminate();
 
         Renderer::begin(menuCameraController->camera);
-        ui_test(dt);
+        {
+            IUI::begin(menuCameraController);
+            tap_to_continue();
+            IUI::end();
+        }
+
         Renderer::end();
     }
 
-    void ui_test(Time dt) {
-        using namespace IUI;
+    void tap_to_continue() {
+        int parent = 1;
         int item = 0;
-        begin(menuCameraController);
-        {
-            if (button(uuid({0, item++, 0}),
-                       WidgetConfig({.position = glm::vec2{0.f, 0.f},
-                                     .size = glm::vec2{2.f, 1.f}}))) {
-                Menu::get().state = Menu::State::UITest;
-            }
+
+        auto startPos =
+            glm::vec2{menuCameraController->camera.position.x - 17.f,
+                      menuCameraController->camera.position.y + -10.f};
+
+        auto textConfig = IUI::WidgetConfig({
+            .text = "Tap to continue",
+            .position = glm::vec2{1.f, 3.f},           //
+            .size = glm::vec2{2.f, 2.f},               //
+            .color = glm::vec4{1.f, 1.0f, 1.0f, 1.f},  //
+        });
+        auto buttonConfig = IUI::WidgetConfig({
+            .position = startPos,           //
+            .size = glm::vec2{40.f, 20.f},  //
+            .transparent = false,           //
+            .child = &textConfig,           //
+            .text = "",                     //
+        });
+
+        if (IUI::button_with_label(IUI::uuid({parent, item++, 0}),
+                                   buttonConfig)) {
+            Menu::get().state = Menu::State::UITest;
         }
-        end();
     }
 
     bool onMouseButtonPressed(Mouse::MouseButtonPressedEvent& e) {
@@ -114,7 +133,7 @@ struct MenuLayer : public Layer {
 
     virtual void onEvent(Event& event) override {
         // log_warn(event.toString().c_str());
-        if (Menu::get().state == Menu::State::Game) return;
+        if (Menu::get().state != Menu::State::Root) return;
 
         menuCameraController->onEvent(event);
         EventDispatcher dispatcher(event);

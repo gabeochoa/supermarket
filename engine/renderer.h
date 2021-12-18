@@ -110,7 +110,10 @@ struct Renderer {
 
         ShaderLibrary shaderLibrary;
         std::array<std::shared_ptr<Texture2D>, MAX_TEX> textureSlots;
-        int nextTexSlot = 1;  // 0 will be white
+        // 0 will be white
+        // 1 is full transparent
+        int MIN_TEX_SLOT = 2;
+        int nextTexSlot = MIN_TEX_SLOT;
     };
 
     static SceneData* sceneData;
@@ -138,11 +141,18 @@ struct Renderer {
     }
 
     static void init_default_textures() {
-        std::shared_ptr<Texture> whiteTexture =
-            std::make_shared<Texture2D>("white", 1, 1);
-        unsigned int data = 0xffffffff;
-        whiteTexture->setData(&data);
-        textureLibrary.add(whiteTexture);
+        {
+            std::shared_ptr<Texture> whiteTexture =
+                std::make_shared<Texture2D>("white", 1, 1);
+            unsigned int data = 0xffffffff;
+            whiteTexture->setData(&data);
+            textureLibrary.add(whiteTexture);
+        }
+
+        // TODO have to make sure this resource
+        // exists as part of the engine
+        // and not the game textures
+        addTexture("./resources/transparent.png");
     }
 
     static void init() {
@@ -249,7 +259,7 @@ struct Renderer {
             dynamic_pointer_cast<Texture2D>(textureLibrary.get("white"));
         sceneData->quadIndexCount = 0;
         sceneData->qvbufferptr = sceneData->qvbufferstart;
-        sceneData->nextTexSlot = 1;
+        sceneData->nextTexSlot = sceneData->MIN_TEX_SLOT;
     }
 
     static void next_batch() {

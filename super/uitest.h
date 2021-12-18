@@ -18,7 +18,7 @@ struct UITestLayer : public Layer {
         Menu::get().state = Menu::State::UITest;
 
         uiTestCameraController.reset(
-            new OrthoCameraController(WIN_RATIO, true, 10.f, 0.f, 0.f));
+            new OrthoCameraController(WIN_RATIO, 10.f, 0.f, 0.f));
         uiTestCameraController->camera.setPosition(glm::vec3{15.f, 0.f, 0.f});
 
         IUI::init_context();
@@ -44,6 +44,10 @@ struct UITestLayer : public Layer {
         }
         if (event.keycode == Key::mapping["Widget Mod"]) {
             IUI::get()->mod = static_cast<Key::KeyCode>(event.keycode);
+        }
+        if (IUI::get()->textfieldMod.count(
+                static_cast<Key::KeyCode>(event.keycode)) == 1) {
+            IUI::get()->modchar = static_cast<Key::KeyCode>(event.keycode);
         }
         return false;
     }
@@ -94,8 +98,12 @@ struct UITestLayer : public Layer {
                 log_info("clicked button 3");
             }
 
-            if (slider(uuid({0, item++, 0}), glm::vec2{9.f, 0.f},
-                       glm::vec2{1.f, 3.f}, &value, 0.08f, 0.95f)) {
+            if (slider(uuid({0, item++, 0}),
+                       WidgetConfig({
+                           .position = glm::vec2{9.f, 0.f},
+                           .size = glm::vec2{1.f, 3.f},
+                       }),
+                       &value, 0.08f, 0.95f)) {
                 // log_info("idk moved slider? ");
             }
 

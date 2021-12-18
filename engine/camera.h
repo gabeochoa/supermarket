@@ -52,33 +52,36 @@ struct OrthoCameraController {
     float zoomLevel;
     float camSpeed;
     float rotSpeed;
+    bool movementEnabled;
     bool rotationEnabled;
     OrthoCamera camera;
 
-    OrthoCameraController(float ratio, bool rotation = true,
-                          float defaultZoom = 1.f, float cameraSpeed = 5.f,
-                          float rotationSpeed = 180.f)
+    OrthoCameraController(float ratio, float defaultZoom = 1.f,
+                          float cameraSpeed = 5.f, float rotationSpeed = 180.f)
         : aspectRatio(ratio),
           zoomLevel(defaultZoom),
           camSpeed(cameraSpeed),
           rotSpeed(rotationSpeed),
-          rotationEnabled(rotation),
+          movementEnabled(cameraSpeed != 0.f),
+          rotationEnabled(rotationSpeed != 0.f),
           camera(-ratio * zoomLevel, ratio * zoomLevel, -zoomLevel, zoomLevel) {
     }
 
     void onUpdate(Time dt) {
         prof(__PROFILE_FUNC__);
-        if (Input::isKeyPressed(Key::mapping["Left"])) {
-            camera.position.x -= camSpeed * dt;
-        }
-        if (Input::isKeyPressed(Key::mapping["Right"])) {
-            camera.position.x += camSpeed * dt;
-        }
-        if (Input::isKeyPressed(Key::mapping["Down"])) {
-            camera.position.y -= camSpeed * dt;
-        }
-        if (Input::isKeyPressed(Key::mapping["Up"])) {
-            camera.position.y += camSpeed * dt;
+        if (movementEnabled) {
+            if (Input::isKeyPressed(Key::mapping["Left"])) {
+                camera.position.x -= camSpeed * dt;
+            }
+            if (Input::isKeyPressed(Key::mapping["Right"])) {
+                camera.position.x += camSpeed * dt;
+            }
+            if (Input::isKeyPressed(Key::mapping["Down"])) {
+                camera.position.y -= camSpeed * dt;
+            }
+            if (Input::isKeyPressed(Key::mapping["Up"])) {
+                camera.position.y += camSpeed * dt;
+            }
         }
         if (rotationEnabled) {
             if (Input::isKeyPressed(Key::mapping["Rotate Clockwise"])) {
