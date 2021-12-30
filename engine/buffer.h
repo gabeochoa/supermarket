@@ -234,3 +234,67 @@ struct OpenGLIndexBuffer : public IndexBuffer {
     }
 };
 
+struct FrameBufferSpec {
+    int width;
+    int height;
+    int samples = 1;
+
+    bool swapChainTarget = false;
+};
+
+struct FrameBuffer {
+    FrameBufferSpec spec;
+    FrameBuffer(const FrameBufferSpec& s) : spec(s) {}
+    virtual ~FrameBuffer() {}
+    virtual void bind() = 0;
+    virtual void unbind() = 0;
+
+    // these are kinda ogl things?
+    unsigned int rendererID;
+    unsigned int colorAttachment;
+    unsigned int depthAttachment;
+};
+
+struct OpenGLFrameBuffer : public FrameBuffer {
+    OpenGLFrameBuffer(const FrameBufferSpec& s) : FrameBuffer(s) {}
+
+    virtual void bind() override {
+        glBindFramebuffer(GL_FRAMEBUFFER, rendererID);
+    }
+    virtual void unbind() override { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+
+    void invalidate() {
+        glCreateFramebuffers(1, &rendererID);
+        glBindFramebuffer(GL_FRAMEBUFFER, rendererID);
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &colorAttachment);
+        glBindTexture(GL_TEXTURE_2D, colorAttachment);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, spec.width, spec.height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, colorAttachment, 0);
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &depthAttachment);
+        glBindTexture(GL_TEXTURE_2D, depthAttachment);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, spec.width,
+                     spec.height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8,
+                     nullptr);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                               GL_TEXTURE_2D, depthAttachment, 0);
+
+        M_ASSERT(
+            glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+            "Framebuffer was not complete");
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    virtual ~OpenGLFrameBuffer() {
+        glDeleteFramebuffers(1, &rendererID);
+        glDeleteTextures(1, &colorAttachment);
+        glDeleteTextures(1, &depthAttachment);
+    }
+};

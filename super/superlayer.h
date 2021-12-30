@@ -16,24 +16,37 @@
 struct GameUILayer : public Layer {
     const glm::vec2 camTopLeft = {35.f, 19.5f};
     const glm::vec2 camBottomRight = {35.f, -18.f};
+    glm::vec2 viewportSize;
+    std::shared_ptr<FrameBuffer> frameBuffer;
 
     GameUILayer() : Layer("Game UI") {
         isMinimized = true;
+
+        viewportSize = glm::vec2{WIN_W, WIN_H};
         gameUICameraController.reset(new OrthoCameraController(WIN_RATIO));
-        gameUICameraController->camera.setViewport({0, 0, WIN_W, WIN_H});
+        gameUICameraController->camera.setViewport(
+            {0, 0, viewportSize.x, viewportSize.y});
         gameUICameraController->setZoomLevel(20.f);
         // move the camera so 0,0 is top left
         gameUICameraController->camera.setPosition(glm::vec3{camTopLeft, 0.f});
         gameUICameraController->movementEnabled = false;
         gameUICameraController->rotationEnabled = false;
         gameUICameraController->zoomEnabled = false;
+
+        FrameBufferSpec fbSpec({
+            .width = WIN_W,
+            .height = WIN_H,
+        });
+        frameBuffer.reset(new OpenGLFrameBuffer(fbSpec));
     }
 
     virtual ~GameUILayer() {}
     virtual void onAttach() override {}
     virtual void onDetach() override {}
 
-    void render() {
+    void render_to_fb() {
+        frameBuffer->bind();
+        // Renderer::clear([> color <] {0.1f, 0.1f, 0.1f, 1.0f});
         Renderer::begin(gameUICameraController->camera);
         using namespace IUI;
         UIFrame BandE(gameUICameraController);
@@ -76,6 +89,12 @@ struct GameUILayer : public Layer {
                children);
 
         Renderer::end();
+        frameBuffer->unbind();
+    }
+
+    void render() {
+        render_to_fb();
+        // auto textureID = frameBuffer->colorAttachment;
     }
 
     virtual void onUpdate(Time dt) override {
@@ -94,9 +113,18 @@ struct GameUILayer : public Layer {
         Renderer::stats.end();
     }
 
+    bool onWindowResized(WindowResizeEvent& e) {
+        // viewportSize = glm::vec2{e.width(), e.height()};
+        // frameBuffer->resize(viewportSize);
+        return false;
+    }
+
     virtual void onEvent(Event& event) override {
         if (Menu::get().state != Menu::State::Game) return;
         gameUICameraController->onEvent(event);
+        EventDispatcher dispatcher(event);
+        dispatcher.dispatch<WindowResizeEvent>(std::bind(
+            &GameUILayer::onWindowResized, this, std::placeholders::_1));
     }
 };
 
