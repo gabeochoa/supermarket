@@ -1,11 +1,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <glm/glm.hpp>
 #include <memory>
 #include <type_traits>
 #include <vector>
-
-#include "../engine/external_include.h"
 
 // By default disabling query bounds checking
 // #define SUPERMARKET_QUADTREE_ENFORCE_INSIDE_DURING_QUERY
@@ -59,25 +58,20 @@ class Box {
     }
 };
 
-}  // namespace quadtree
-
-namespace quadtree {
-
-template <typename T, typename GetBox, typename Equal = std::equal_to<T>,
-          typename Float = float>
+template <typename T, typename GetBox, typename Equal = std::equal_to<T>>
 class Quadtree {
     static_assert(
         std::is_convertible_v<std::invoke_result_t<GetBox, const T&>,
-                              Box<Float>>,
-        "GetBox must be a callable of signature Box<Float>(const T&)");
+                              Box<float>>,
+        "GetBox must be a callable of signature Box<float>(const T&)");
     static_assert(
         std::is_convertible_v<std::invoke_result_t<Equal, const T&, const T&>,
                               bool>,
         "Equal must be a callable of signature bool(const T&, const T&)");
-    static_assert(std::is_arithmetic_v<Float>);
+    static_assert(std::is_arithmetic_v<float>);
 
    public:
-    Quadtree(const Box<Float>& box, const GetBox& getBox = GetBox(),
+    Quadtree(const Box<float>& box, const GetBox& getBox = GetBox(),
              const Equal& equal = Equal())
         : mBox(box),
           mRoot(std::make_unique<Node>()),
@@ -102,7 +96,7 @@ class Quadtree {
         remove(mRoot.get(), mBox, value);
     }
 
-    std::vector<T> query(const Box<Float>& box) const {
+    std::vector<T> query(const Box<float>& box) const {
         auto values = std::vector<T>();
         query(mRoot.get(), mBox, box, values);
         return values;
@@ -123,7 +117,7 @@ class Quadtree {
         std::vector<T> values;
     };
 
-    Box<Float> mBox;
+    Box<float> mBox;
     std::unique_ptr<Node> mRoot;
     GetBox mGetBox;
     Equal mEqual;
@@ -132,32 +126,32 @@ class Quadtree {
         return !static_cast<bool>(node->children[0]);
     }
 
-    Box<Float> computeBox(const Box<Float>& box, int i) const {
+    Box<float> computeBox(const Box<float>& box, int i) const {
         auto origin = box.getTopLeft();
-        auto childSize = box.getSize() / static_cast<Float>(2);
+        auto childSize = box.getSize() / static_cast<float>(2);
         switch (i) {
             // North West
             case 0:
-                return Box<Float>(origin, childSize);
+                return Box<float>(origin, childSize);
             // Norst East
             case 1:
-                return Box<Float>(glm::vec2(origin.x + childSize.x, origin.y),
+                return Box<float>(glm::vec2(origin.x + childSize.x, origin.y),
                                   childSize);
             // South West
             case 2:
-                return Box<Float>(glm::vec2(origin.x, origin.y + childSize.y),
+                return Box<float>(glm::vec2(origin.x, origin.y + childSize.y),
                                   childSize);
             // South East
             case 3:
-                return Box<Float>(origin + childSize, childSize);
+                return Box<float>(origin + childSize, childSize);
             default:
                 assert(false && "Invalid child index");
-                return Box<Float>();
+                return Box<float>();
         }
     }
 
-    int getQuadrant(const Box<Float>& nodeBox,
-                    const Box<Float>& valueBox) const {
+    int getQuadrant(const Box<float>& nodeBox,
+                    const Box<float>& valueBox) const {
         auto center = nodeBox.getCenter();
         // West
         if (valueBox.getRight() < center.x) {
@@ -186,7 +180,7 @@ class Quadtree {
             return -1;
     }
 
-    void add(Node* node, std::size_t depth, const Box<Float>& box,
+    void add(Node* node, std::size_t depth, const Box<float>& box,
              const T& value) {
         assert(node != nullptr);
         assert(box.contains(mGetBox(value)));
@@ -211,7 +205,7 @@ class Quadtree {
         }
     }
 
-    void split(Node* node, const Box<Float>& box) {
+    void split(Node* node, const Box<float>& box) {
         assert(node != nullptr);
         assert(isLeaf(node) && "Only leaves can be split");
         // Create children
@@ -229,7 +223,7 @@ class Quadtree {
         node->values = std::move(newValues);
     }
 
-    bool remove(Node* node, const Box<Float>& box, const T& value) {
+    bool remove(Node* node, const Box<float>& box, const T& value) {
         assert(node != nullptr);
         assert(box.contains(mGetBox(value)));
         if (isLeaf(node)) {
@@ -286,7 +280,7 @@ class Quadtree {
             return false;
     }
 
-    void query(Node* node, const Box<Float>& box, const Box<Float>& queryBox,
+    void query(Node* node, const Box<float>& box, const Box<float>& queryBox,
                std::vector<T>& values) const {
         assert(node != nullptr);
 #ifdef SUPERMARKET_QUADTREE_ENFORCE_INSIDE_DURING_QUERY
