@@ -1,10 +1,5 @@
 
 
-#define BACKWARD_SUPERMARKET
-#include "../vendor/backward.hpp"
-//
-#define SUPER_ENGINE_PROFILING_DISABLED
-#include "../vendor/Quadtree.h"
 //
 #include "../engine/app.h"
 #include "../engine/edit.h"
@@ -78,6 +73,8 @@ int main(int argc, char** argv) {
 
     // on start tests
     {
+        // auto ll = LOG_LEVEL;
+        // LOG_LEVEL = LogLevel::ALL;
         vectests();
         quadtree_test();
         theta_test();
@@ -93,8 +90,8 @@ int main(int argc, char** argv) {
             }
         }
         // test_file_functionality();
-
         test_global_commands();
+        // LOG_LEVEL = ll;
     }
 
     add_globals();

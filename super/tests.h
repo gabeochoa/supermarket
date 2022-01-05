@@ -37,8 +37,6 @@ inline float run_pathfinding(
 }
 
 inline void quadtree_test() {
-    auto ll = LOG_LEVEL;
-    LOG_LEVEL = LogLevel::ALL;
     log_trace("quadtree_test() start");
 
     using namespace quadtree;
@@ -97,13 +95,9 @@ inline void quadtree_test() {
               elapsed);
 
     log_trace("quadtree_test() end");
-
-    LOG_LEVEL = ll;
 }
 
 inline void theta_test() {
-    auto ll = LOG_LEVEL;
-    LOG_LEVEL = LogLevel::ALL;
     log_trace("theta_test() start");
 
     // Walk straight through
@@ -142,10 +136,12 @@ inline void theta_test() {
 
     entities.clear();
     log_trace("theta_test() end");
-    LOG_LEVEL = ll;
     return;
 }
 
+// This is actually being used in main.cpp
+// but Coc::Clang doesnt seem to care :)
+__attribute__((unused))  //
 void point_collision_test() {
     auto shelf =
         std::make_shared<Shelf>(glm::vec2{0.f, 0.f}, glm::vec2{2.f, 2.f}, 0.f,
