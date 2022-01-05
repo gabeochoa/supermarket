@@ -3,6 +3,7 @@
 
 #include <atomic>
 
+#include "../engine/edit.h"
 #include "../engine/pch.hpp"
 #include "../engine/renderer.h"
 
@@ -148,14 +149,35 @@ struct fmt::formatter<Entity> {
     }
 };
 
-static std::vector<std::shared_ptr<Entity>> entities;
+typedef quadtree::Quadtree<
+    std::shared_ptr<Entity>,
+    std::function<quadtree::Box<float>(const std::shared_ptr<Entity>&)>>
+    EntityQT;
 
 struct EntityHelper {
-    static bool entityInLocation(glm::vec4 rect) {
-        for (auto e : entities) {
-            if (aabb(e->getRect(), rect)) return true;
+    static inline EntityQT* getQuadTreePtr() {
+        return GLOBALS.get_ptr<EntityQT>("quadtree");
+    }
+
+    static void forEachEntityQT(
+        const std::function<void(std::shared_ptr<Entity>)>& cb) {
+        for (auto& e : *getQuadTreePtr()) {
+            cb(e);
         }
-        return false;
+    }
+
+    static void forEachEntityVector(
+        std::vector<std::shared_ptr<Entity>> entities,
+        const std::function<void(std::shared_ptr<Entity>)>& cb) {
+        for (auto& e : entities) {
+            cb(e);
+        }
+    }
+
+    static bool entityInLocation(glm::vec4 rect) {
+        return !getQuadTreePtr()
+                    ->query(quadtree::Box<float>::create(rect))
+                    .empty();
     }
 
     static constexpr bool entityInLocation(glm::vec2 pos, glm::vec2 size) {
@@ -166,11 +188,11 @@ struct EntityHelper {
     static constexpr std::shared_ptr<T> getRandomEntity(
         const glm::vec2& notpos = {-99.f, -99.f}) {
         std::vector<std::shared_ptr<T>> matching;
-        for (auto& e : entities) {
+        forEachEntityQT([&](const std::shared_ptr<Entity>& e) {
             auto s = dynamic_pointer_cast<T>(e);
-            if (!s) continue;
+            if (!s) return;
             if (glm::distance(s->position, notpos) > 1.f) matching.push_back(s);
-        }
+        });
         int i = randIn(0, matching.size() - 1);
         return matching[i];
     }
@@ -179,13 +201,13 @@ struct EntityHelper {
     static constexpr std::vector<std::shared_ptr<T>> getEntitiesInRange(
         glm::vec2 pos, float range) {
         std::vector<std::shared_ptr<T>> matching;
-        for (auto& e : entities) {
+        forEachEntityQT([&](const std::shared_ptr<Entity>& e) {
             auto s = dynamic_pointer_cast<T>(e);
-            if (!s) continue;
+            if (!s) return;
             if (glm::distance(pos, e->position) < range) {
                 matching.push_back(s);
             }
-        }
+        });
         return matching;
     }
 
@@ -196,14 +218,14 @@ struct EntityHelper {
             std::is_base_of<Storable, T>::value,
             "Can only be called with a T that is a child of Storable");
         std::vector<std::shared_ptr<T>> matching;
-        for (auto& e : entities) {
+        forEachEntityQT([&](const std::shared_ptr<Entity>& e) {
             auto s = dynamic_pointer_cast<T>(e);
-            if (!s) continue;
-            if (glm::distance(pos, e->position) > range) continue;
+            if (!s) return;
+            if (glm::distance(pos, e->position) > range) return;
             if (s->contents.find(itemID) != s->contents.end()) {
                 matching.push_back(s);
             }
-        }
+        });
         return matching;
     }
 
@@ -211,17 +233,23 @@ struct EntityHelper {
     static std::vector<std::shared_ptr<T>> getEntityInSelection(
         glm::vec4 rect) {
         std::vector<std::shared_ptr<T>> matching;
-        for (auto& e : entities) {
+        forEachEntityQT([&](const std::shared_ptr<Entity>& e) {
             auto s = dynamic_pointer_cast<T>(e);
-            if (!s) continue;
+            if (!s) return;
             if (aabb(s->getRect(), rect)) {
                 matching.push_back(s);
             }
-        }
+        });
         return matching;
     }
 
     static bool isWalkable(const glm::vec2& pos, const glm::vec2 size) {
+        return getQuadTreePtr()->query(quadtree::Box<float>(pos, size)).empty();
+    }
+
+    static bool isWalkableEntities(
+        std::vector<std::shared_ptr<Entity>> entities, const glm::vec2& pos,
+        const glm::vec2 size) {
         for (auto& e : entities) {
             if (e->canMove()) {
                 continue;

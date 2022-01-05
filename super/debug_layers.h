@@ -7,6 +7,7 @@
 #include "../engine/renderer.h"
 #include "../engine/time.h"
 #include "entities.h"
+#include "entity.h"
 #include "global.h"
 #include "job.h"
 #include "menu.h"
@@ -252,7 +253,7 @@ struct EntityDebugLayer : public Layer {
 
         std::vector<std::shared_ptr<MovableEntity>> movables;
 
-        for (auto& e : entities) {
+        for (auto& e : *EntityHelper::getQuadTreePtr()) {
             auto s = fmt::format("{}", *e);
             GLTtext* text = gltCreateText();
             gltSetText(text, s.c_str());
@@ -287,7 +288,7 @@ struct EntityDebugLayer : public Layer {
 
         Renderer::begin(cameraController->camera);
 
-        for (auto& e : entities) {
+        for (auto& e : *EntityHelper::getQuadTreePtr()) {
             auto [a, b, c, d] = getBoundingBox(e->position, e->size);
             node->position = a;
             node->render();

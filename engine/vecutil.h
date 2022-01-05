@@ -112,6 +112,8 @@ inline void test_yes_intersection_yes_contains() {
     auto pos = glm::vec2{0.f, 0.0f};
     auto size = glm::vec2{2.f, 2.0f};
     auto rect = posSizeToRect(pos, size);
+    M_ASSERT(aabb(rect, rect), "Rects should overlap itself");
+    M_ASSERT(contains(rect, rect), "rect should contain itself");
 
     auto pos2 = glm::vec2{0.5f, 0.5f};
     auto size2 = glm::vec2{1.f, 1.0f};
@@ -119,6 +121,12 @@ inline void test_yes_intersection_yes_contains() {
 
     M_ASSERT(aabb(rect, rect2), "Rects should overlap");
     M_ASSERT(contains(rect, rect2), "rect should contain rect2");
+
+    auto r = glm::vec4{0.00, 0.00, 20.00, 20.00};
+    auto r2 = glm::vec4{1.00, 5.00, 2.00, 6.00};
+    M_ASSERT(aabb(r, r2), "Rects should overlap");
+    M_ASSERT(contains(r, r2), "r should contain r2");
+    M_ASSERT(!contains(r2, r), "r2 should not contain r");
 }
 
 inline void vectests() {

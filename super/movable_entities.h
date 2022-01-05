@@ -22,14 +22,14 @@ inline std::vector<glm::vec2> generateWalkablePath(  //
 
     // TODO @FIX trace actually will still run
     // we gotta do some kind of fancy #if log thing
-    log_trace("starting theta");
+    log_info("starting theta");
     LazyTheta t(
         start, end,
         std::bind(EntityHelper::isWalkable, std::placeholders::_1, size));
     auto a = t.go();
     std::reverse(a.begin(), a.end());
     for (auto i : a) {
-        log_trace("{}", i);
+        log_info("{}", i);
     }
     return a;
 }

@@ -24,6 +24,8 @@ https://github.com/bombela/backward-cpp
 - TODO remove if cant get good format
 - stack traces
 
+https://github.com/pvigier/Quadtree
+- * added support for disabling bounds check for query
 
 ```
 

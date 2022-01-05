@@ -55,6 +55,12 @@
 #define GLT_IMPLEMENTATION
 #include "../vendor/glText.h"
 #include "../vendor/portable-file-dialogs.h"
+//
+#define BACKWARD_SUPERMARKET
+#include "../vendor/backward.hpp"
+//
+#define SUPER_ENGINE_PROFILING_DISABLED
+#include "quadtree.h"
 
 #ifdef __APPLE__
 #pragma clang diagnostic pop
