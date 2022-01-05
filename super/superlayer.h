@@ -10,6 +10,7 @@
 //
 #include "drag_area.h"
 #include "entities.h"
+#include "entity.h"
 #include "job.h"
 #include "menu.h"
 
@@ -82,7 +83,7 @@ struct GameUILayer : public Layer {
 
     ItemGroup getTotalInventory() {
         ItemGroup ig;
-        for (auto& e : entities) {
+        for (auto& e : *EntityHelper::getQuadTreePtr()) {
             auto s = dynamic_pointer_cast<Storable>(e);
             if (s) {
                 for (auto kv : s->contents) {
@@ -192,12 +193,27 @@ struct GameUILayer : public Layer {
     }
 };
 
+using namespace quadtree;
 struct SuperLayer : public Layer {
     std::shared_ptr<DragArea> dragArea;
     glm::vec4 viewport = {0, 0, WIN_W, WIN_H};
 
+    std::shared_ptr<EntityQT> entitiesQT;
+
     SuperLayer() : Layer("Supermarket") {
         isMinimized = true;
+
+        entitiesQT.reset(
+            new Quadtree<
+                std::shared_ptr<Entity>,
+                std::function<Box<float>(const std::shared_ptr<Entity>&)>>(
+                Box<float>(-1000.f, -1000.f, 2000.f, 2000.f),
+                ([=](const std::shared_ptr<Entity>& e) {
+                    return Box<float>(e->position.x, e->position.y, e->size.y,
+                                      e->size.y);
+                })));
+
+        GLOBALS.set("quadtree", entitiesQT.get());
 
         cameraController.reset(new OrthoCameraController(WIN_RATIO));
         cameraController->camera.setViewport(viewport);
@@ -235,7 +251,7 @@ struct SuperLayer : public Layer {
                     glm::vec2{1.f + i, -3.f + j},  //
                     glm::vec2{1.f, 1.f}, 0.f,      //
                     glm::vec4{1.0f, 1.0f, 1.0f, 1.0f}, "shelf");
-                entities.push_back(shelf2);
+                entitiesQT->add(shelf2);
             }
         }
 
@@ -246,7 +262,7 @@ struct SuperLayer : public Layer {
         storage->contents.addItem(1, 6);
         storage->contents.addItem(2, 7);
         storage->contents.addItem(3, 9);
-        entities.push_back(storage);
+        entitiesQT->add(storage);
 
         const int num_people_sprites = 3;
         std::array<std::string, num_people_sprites> peopleSprites = {
@@ -261,7 +277,7 @@ struct SuperLayer : public Layer {
             emp.color.w = 1.f;
             emp.size = {0.6f, 0.6f};
             emp.textureName = peopleSprites[i % num_people_sprites];
-            entities.push_back(std::make_shared<Employee>(emp));
+            entitiesQT->add(std::make_shared<Employee>(emp));
         }
 
         dragArea.reset(new DragArea(glm::vec2{0.f}, glm::vec2{0.f}, 0.f,
@@ -278,7 +294,7 @@ struct SuperLayer : public Layer {
             cameraController->onUpdate(dt);
         }
 
-        for (auto& entity : entities) {
+        for (auto& entity : *entitiesQT) {
             entity->onUpdate(dt);
         }
 
@@ -287,10 +303,10 @@ struct SuperLayer : public Layer {
 
     void render() {
         Renderer::begin(cameraController->camera);
-        // should go underneath entities also
+        // should go underneath entitiesQT also
         dragArea->render_selected();
 
-        for (auto& entity : entities) {
+        for (auto& entity : *entitiesQT) {
             entity->render();
         }
 
@@ -309,7 +325,7 @@ struct SuperLayer : public Layer {
                          .endPosition = glm::circularRand<float>(5.f)})));
         }
 
-        for (auto& entity : entities) {
+        for (auto& entity : *entitiesQT) {
             auto storage = dynamic_pointer_cast<Storage>(entity);
             if (storage) {
                 // TODO for now just keep queue jobs until we are empty
@@ -395,11 +411,11 @@ struct SuperLayer : public Layer {
         fillJobQueue();       // add more jobs if needed
         JobQueue::cleanup();  // Cleanup all completed jobs
 
-        // Cleanup entities marked cleanup
-        auto it = entities.begin();
-        while (it != entities.end()) {
+        // Cleanup entitiesQT marked cleanup
+        auto it = entitiesQT->begin();
+        while (it != entitiesQT->end()) {
             if ((*it)->cleanup) {
-                entities.erase(it);
+                entitiesQT->remove((*it));
                 continue;
             }
             it++;

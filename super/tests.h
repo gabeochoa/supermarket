@@ -137,6 +137,8 @@ inline void theta_test() {
     // Walk straight through
     //  - i expect it to just walk around
 
+    std::vector<std::shared_ptr<Entity>> entities;
+
     auto shelf =
         std::make_shared<Shelf>(glm::vec2{1.f, 0.f}, glm::vec2{1.f, 1.f}, 0.f,
                                 glm::vec4{1.0f, 1.0f, 1.0f, 1.0f}, "box");
@@ -147,8 +149,9 @@ inline void theta_test() {
                                 glm::vec4{1.0f, 1.0f, 1.0f, 1.0f}, "box");
     entities.push_back(shelf2);
 
-    auto duration = run_pathfinding(std::bind(
-        EntityHelper::isWalkable, std::placeholders::_1, glm::vec2{1.f}));
+    auto duration =
+        run_pathfinding(std::bind(EntityHelper::isWalkableEntities, entities,
+                                  std::placeholders::_1, glm::vec2{1.f}));
     log_trace("ThetaStar with EntityHelper with {} entities took: {}",
               entities.size(), duration);
 
@@ -163,8 +166,9 @@ inline void theta_test() {
                 ));
         }
     }
-    duration = run_pathfinding(std::bind(
-        EntityHelper::isWalkable, std::placeholders::_1, glm::vec2{1.f}));
+    duration =
+        run_pathfinding(std::bind(EntityHelper::isWalkableEntities, entities,
+                                  std::placeholders::_1, glm::vec2{1.f}));
     log_trace("ThetaStar with EntityHelper with {} entities took: {}",
               entities.size(), duration);
 

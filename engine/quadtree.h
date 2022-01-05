@@ -35,6 +35,10 @@ class Box {
     constexpr Box(const glm::vec2& position, const glm::vec2& size) noexcept
         : left(position.x), top(position.y), width(size.x), height(size.y) {}
 
+    static Box<T> create(const glm::vec4 rect) {
+        return Box<T>(rect.x, rect.y, rect.z - rect.x, rect.w - rect.y);
+    }
+
     constexpr T getRight() const noexcept { return left + width; }
 
     constexpr T getBottom() const noexcept { return top + height; }
