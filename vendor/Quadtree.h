@@ -1,10 +1,11 @@
-#pragma once
 
 #include <algorithm>
 #include <cassert>
 #include <memory>
 #include <type_traits>
 #include <vector>
+
+#include "../engine/external_include.h"
 
 // By default disabling query bounds checking
 // #define SUPERMARKET_QUADTREE_ENFORCE_INSIDE_DURING_QUERY
@@ -14,43 +15,6 @@
 // are
 // #define SUPERMARKET_REMOVE_ENTITY_COUNT
 // to disable it
-
-namespace quadtree {
-
-template <typename T>
-class Vector2 {
-   public:
-    T x;
-    T y;
-
-    constexpr Vector2<T>(T X = 0, T Y = 0) noexcept : x(X), y(Y) {}
-
-    constexpr Vector2<T>& operator+=(const Vector2<T>& other) noexcept {
-        x += other.x;
-        y += other.y;
-        return *this;
-    }
-
-    constexpr Vector2<T>& operator/=(T t) noexcept {
-        x /= t;
-        y /= t;
-        return *this;
-    }
-};
-
-template <typename T>
-constexpr Vector2<T> operator+(Vector2<T> lhs, const Vector2<T>& rhs) noexcept {
-    lhs += rhs;
-    return lhs;
-}
-
-template <typename T>
-constexpr Vector2<T> operator/(Vector2<T> vec, T t) noexcept {
-    vec /= t;
-    return vec;
-}
-
-}  // namespace quadtree
 
 namespace quadtree {
 
@@ -65,23 +29,23 @@ class Box {
     constexpr Box(T Left = 0, T Top = 0, T Width = 0, T Height = 0) noexcept
         : left(Left), top(Top), width(Width), height(Height) {}
 
-    constexpr Box(const Vector2<T>& position, const Vector2<T>& size) noexcept
+    constexpr Box(const glm::vec2& position, const glm::vec2& size) noexcept
         : left(position.x), top(position.y), width(size.x), height(size.y) {}
 
     constexpr T getRight() const noexcept { return left + width; }
 
     constexpr T getBottom() const noexcept { return top + height; }
 
-    constexpr Vector2<T> getTopLeft() const noexcept {
-        return Vector2<T>(left, top);
+    constexpr glm::vec2 getTopLeft() const noexcept {
+        return glm::vec2(left, top);
     }
 
-    constexpr Vector2<T> getCenter() const noexcept {
-        return Vector2<T>(left + width / 2, top + height / 2);
+    constexpr glm::vec2 getCenter() const noexcept {
+        return glm::vec2(left + width / 2, top + height / 2);
     }
 
-    constexpr Vector2<T> getSize() const noexcept {
-        return Vector2<T>(width, height);
+    constexpr glm::vec2 getSize() const noexcept {
+        return glm::vec2(width, height);
     }
 
     constexpr bool contains(const Box<T>& box) const noexcept {
@@ -177,14 +141,12 @@ class Quadtree {
                 return Box<Float>(origin, childSize);
             // Norst East
             case 1:
-                return Box<Float>(
-                    Vector2<Float>(origin.x + childSize.x, origin.y),
-                    childSize);
+                return Box<Float>(glm::vec2(origin.x + childSize.x, origin.y),
+                                  childSize);
             // South West
             case 2:
-                return Box<Float>(
-                    Vector2<Float>(origin.x, origin.y + childSize.y),
-                    childSize);
+                return Box<Float>(glm::vec2(origin.x, origin.y + childSize.y),
+                                  childSize);
             // South East
             case 3:
                 return Box<Float>(origin + childSize, childSize);

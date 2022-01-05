@@ -4,7 +4,8 @@
 #include "../vendor/backward.hpp"
 //
 #define SUPER_ENGINE_PROFILING_DISABLED
-
+#include "../vendor/Quadtree.h"
+//
 #include "../engine/app.h"
 #include "../engine/edit.h"
 #include "../engine/file.h"

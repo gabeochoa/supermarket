@@ -55,8 +55,6 @@
 #define GLT_IMPLEMENTATION
 #include "../vendor/glText.h"
 #include "../vendor/portable-file-dialogs.h"
-//
-#include "../vendor/Quadtree.h"
 
 #ifdef __APPLE__
 #pragma clang diagnostic pop
