@@ -8,6 +8,8 @@
 #include "entities.h"
 #include "entity.h"
 
+using namespace quadtree;
+
 inline float run_pathfinding(
     const std::function<bool(const glm::vec2&)> canwalk) {
     auto start_tm = std::chrono::high_resolution_clock::now();
@@ -36,10 +38,9 @@ inline float run_pathfinding(
     return duration;
 }
 
-inline void quadtree_test() {
+inline void quadtree_pathfinding_test() {
     log_trace("quadtree_test() start");
 
-    using namespace quadtree;
     auto entityToQuad = [](const std::shared_ptr<Entity>& e) {
         return Box<float>(e->position.x, e->position.y, e->size.x, e->size.y);
     };
@@ -95,6 +96,39 @@ inline void quadtree_test() {
               elapsed);
 
     log_trace("quadtree_test() end");
+}
+
+inline void quadtree_iterator_test() {
+    auto entityToQuad = [](const std::shared_ptr<Entity>& e) {
+        return Box<float>(e->position.x, e->position.y, e->size.x, e->size.y);
+    };
+
+    Quadtree<std::shared_ptr<Entity>, decltype(entityToQuad)> qt(
+        Box<float>(0.f, 0.f, 20.f, 20.f), entityToQuad);
+
+    for (int i = 6; i < 20; i++) {
+        for (int j = 6; j < 20; j++) {
+            qt.add(std::make_shared<Shelf>(
+                glm::vec2{(float)i, (float)j},      //
+                glm::vec2{1.f, 1.f},                //
+                0.f,                                //
+                glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},  //
+                "box"                               //
+                ));
+        }
+    }
+
+    int i = 0;
+    for (auto ent : qt) {
+        log_trace("{}", ent->id);
+        i++;
+    }
+    M_ASSERT(i == qt.num_t, "Iterations should match Entities inserted");
+}
+
+inline void quadtree_test() {
+    quadtree_pathfinding_test();
+    quadtree_iterator_test();
 }
 
 inline void theta_test() {

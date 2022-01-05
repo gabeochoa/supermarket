@@ -1,10 +1,14 @@
-
 #include <algorithm>
 #include <cassert>
 #include <glm/glm.hpp>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <vector>
+
+// Taken from
+// https://github.com/pvigier/Quadtree
+// with some modifications
 
 // By default disabling query bounds checking
 // #define SUPERMARKET_QUADTREE_ENFORCE_INSIDE_DURING_QUERY
@@ -58,8 +62,11 @@ class Box {
     }
 };
 
+#include <cstddef>
+#include <iterator>
+
 template <typename T, typename GetBox, typename Equal = std::equal_to<T>>
-class Quadtree {
+struct Quadtree {
     static_assert(
         std::is_convertible_v<std::invoke_result_t<GetBox, const T&>,
                               Box<float>>,
@@ -70,7 +77,12 @@ class Quadtree {
         "Equal must be a callable of signature bool(const T&, const T&)");
     static_assert(std::is_arithmetic_v<float>);
 
-   public:
+    std::vector<std::pair<T, T>> findAllIntersections() const {
+        auto intersections = std::vector<std::pair<T, T>>();
+        findAllIntersections(mRoot.get(), intersections);
+        return intersections;
+    }
+
     Quadtree(const Box<float>& box, const GetBox& getBox = GetBox(),
              const Equal& equal = Equal())
         : mBox(box),
@@ -96,16 +108,18 @@ class Quadtree {
         remove(mRoot.get(), mBox, value);
     }
 
+    std::vector<T> collection;
+
+    auto begin() {
+        collection = query(mBox);
+        return collection.begin();
+    }
+    auto end() { return collection.end(); }
+
     std::vector<T> query(const Box<float>& box) const {
         auto values = std::vector<T>();
         query(mRoot.get(), mBox, box, values);
         return values;
-    }
-
-    std::vector<std::pair<T, T>> findAllIntersections() const {
-        auto intersections = std::vector<std::pair<T, T>>();
-        findAllIntersections(mRoot.get(), intersections);
-        return intersections;
     }
 
    private:
@@ -121,6 +135,28 @@ class Quadtree {
     std::unique_ptr<Node> mRoot;
     GetBox mGetBox;
     Equal mEqual;
+
+    void query(Node* node, const Box<float>& box, const Box<float>& queryBox,
+               std::vector<T>& values) const {
+        assert(node != nullptr);
+#ifdef SUPERMARKET_QUADTREE_ENFORCE_INSIDE_DURING_QUERY
+        assert(queryBox.intersects(box));
+#else
+        // if we are searching outside our global search area
+        // just return early since nothing will match for sure
+        if (!queryBox.intersects(box)) return;
+#endif
+        for (const auto& value : node->values) {
+            if (queryBox.intersects(mGetBox(value))) values.push_back(value);
+        }
+        if (!isLeaf(node)) {
+            for (auto i = std::size_t(0); i < node->children.size(); ++i) {
+                auto childBox = computeBox(box, static_cast<int>(i));
+                if (queryBox.intersects(childBox))
+                    query(node->children[i].get(), childBox, queryBox, values);
+            }
+        }
+    }
 
     bool isLeaf(const Node* node) const {
         return !static_cast<bool>(node->children[0]);
@@ -278,28 +314,6 @@ class Quadtree {
             return true;
         } else
             return false;
-    }
-
-    void query(Node* node, const Box<float>& box, const Box<float>& queryBox,
-               std::vector<T>& values) const {
-        assert(node != nullptr);
-#ifdef SUPERMARKET_QUADTREE_ENFORCE_INSIDE_DURING_QUERY
-        assert(queryBox.intersects(box));
-#else
-        // if we are searching outside our global search area
-        // just return early since nothing will match for sure
-        if (!queryBox.intersects(box)) return;
-#endif
-        for (const auto& value : node->values) {
-            if (queryBox.intersects(mGetBox(value))) values.push_back(value);
-        }
-        if (!isLeaf(node)) {
-            for (auto i = std::size_t(0); i < node->children.size(); ++i) {
-                auto childBox = computeBox(box, static_cast<int>(i));
-                if (queryBox.intersects(childBox))
-                    query(node->children[i].get(), childBox, queryBox, values);
-            }
-        }
     }
 
     void findAllIntersections(

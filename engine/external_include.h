@@ -60,7 +60,7 @@
 #include "../vendor/backward.hpp"
 //
 #define SUPER_ENGINE_PROFILING_DISABLED
-#include "../vendor/Quadtree.h"
+#include "quadtree.h"
 
 #ifdef __APPLE__
 #pragma clang diagnostic pop
