@@ -77,6 +77,8 @@ int main(int argc, char** argv) {
 
     // on start tests
     {
+        vectests();
+        quadtree_test();
         theta_test();
         point_collision_test();
 
