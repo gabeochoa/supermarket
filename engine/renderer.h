@@ -63,8 +63,11 @@ struct Renderer {
     };
 
     struct LineVert {
-        glm::vec3 position;
+        glm::vec4 clipcrd;
         glm::vec4 color;
+        glm::vec2 texcoord;
+        float width;
+        float length;
     };
 
     struct Statistics {
@@ -105,6 +108,10 @@ struct Renderer {
         const int MAX_VERTS = MAX_QUADS * 4;
         const int MAX_IND = MAX_QUADS * 6;
 
+        const int MAX_LINES = 20000;
+        const int MAX_LINE_VERTS = MAX_LINES * 4;
+        const int MAX_LINE_INDICES = MAX_LINES * 6;
+
         std::shared_ptr<VertexArray> quadVA;
         std::shared_ptr<VertexBuffer> quadVB;
 
@@ -115,7 +122,7 @@ struct Renderer {
         std::shared_ptr<VertexArray> lineVA;
         std::shared_ptr<VertexBuffer> lineVB;
 
-        int lineVertexCount = 0;
+        int lineIndexCount = 0;
         LineVert* lvbufferstart = nullptr;
         LineVert* lvbufferptr = nullptr;
 
@@ -124,6 +131,8 @@ struct Renderer {
         ShaderLibrary shaderLibrary;
         std::array<std::shared_ptr<Texture2D>, MAX_TEX> textureSlots;
         int nextTexSlot = 1;  // 0 will be white
+
+        int width, height;
     };
 
     static SceneData* sceneData;
@@ -157,17 +166,40 @@ struct Renderer {
 
     static void init_line_buffers() {
         std::shared_ptr<VertexBuffer> lineVB;
-        std::shared_ptr<Shader> lineShader;
+        std::shared_ptr<IndexBuffer> lineIB;
 
         sceneData->lineVA.reset(VertexArray::create());
         sceneData->lineVB.reset(
-            VertexBuffer::create(sceneData->MAX_VERTS * sizeof(LineVert)));
+            VertexBuffer::create(sceneData->MAX_LINE_VERTS * sizeof(LineVert)));
         sceneData->lineVB->setLayout(BufferLayout{
-            {"i_pos", BufferType::Float3},
+            {"i_clip_coord", BufferType::Float4},
             {"i_color", BufferType::Float4},
+            {"i_texcoord", BufferType::Float2},
+            {"i_width", BufferType::Float},
+            {"i_length", BufferType::Float},
         });
         sceneData->lineVA->addVertexBuffer(sceneData->lineVB);
-        sceneData->lvbufferstart = new LineVert[sceneData->MAX_VERTS];
+        sceneData->lvbufferstart = new LineVert[sceneData->MAX_LINE_VERTS];
+
+        uint32_t* lineIndices = new uint32_t[sceneData->MAX_LINE_INDICES];
+        uint32_t offset = 0;
+
+        for (int i = 0; i < sceneData->MAX_LINE_INDICES; i += 6) {
+            lineIndices[i + 0] = offset + 0;
+            lineIndices[i + 1] = offset + 1;
+            lineIndices[i + 2] = offset + 2;
+
+            lineIndices[i + 3] = offset + 2;
+            lineIndices[i + 4] = offset + 3;
+            lineIndices[i + 5] = offset + 0;
+
+            offset += 4;
+        }
+
+        lineIB.reset(
+            IndexBuffer::create(lineIndices, sceneData->MAX_LINE_INDICES));
+        sceneData->lineVA->setIndexBuffer(lineIB);
+        delete[] lineIndices;
     }
 
     static void init_quad_buffers() {
@@ -209,13 +241,16 @@ struct Renderer {
         delete[] quadIndices;
     }
 
-    static void init() {
+    static void init(int width, int height) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         // glEnable(GL_DEPTH_TEST);
         glEnable(GL_LINE_SMOOTH);
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
         Renderer::setLineThickness(1.f);
+
+        sceneData->width = width;
+        sceneData->height = height;
 
         init_default_shaders();
         init_default_textures();
@@ -231,6 +266,11 @@ struct Renderer {
         textureShader->bind();
         textureShader->uploadUniformIntArray("u_textures", samples.data(),
                                              MAX_TEX);
+
+        auto line = sceneData->shaderLibrary.get("line");
+        line->bind();
+        // 0 no cap // 1 square // 2 round // 3 triangle
+        line->uploadUniformInt("u_cap", 3);
     }
 
     static void resize(int width, int height) {
@@ -243,7 +283,7 @@ struct Renderer {
     }
 
     static void clear(const glm::vec4& color) {
-        prof(__PROFILE_FUNC__);
+        prof give_me_a_name(__PROFILE_FUNC__);
         glClearColor(color.r, color.g, color.b, color.a);
         glClear(GL_COLOR_BUFFER_BIT |
                 GL_DEPTH_BUFFER_BIT);  // Clear the buffers
@@ -260,18 +300,6 @@ struct Renderer {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    static void drawLines(const std::shared_ptr<VertexArray>& vertexArray,
-                          int vertexCount) {
-        prof drlns(__PROFILE_FUNC__);
-        vertexArray->bind();
-        glDrawArrays(GL_LINES, 0, vertexCount);
-        // glDrawArrays(GL_LINE_STRIP, 0, vertexCount);
-        // glDrawArrays(GL_LINE_LOOP, 0, vertexCount);
-        // glDrawElements(GL_LINES, vertexCount, GL_UNSIGNED_INT, nullptr);
-        // glDrawElements(GL_LINE_STRIP, vertexCount, GL_UNSIGNED_INT, nullptr);
-        // glDrawElements(GL_LINE_LOOP, vertexCount, GL_UNSIGNED_INT, nullptr);
-    }
-
     static void begin(OrthoCamera& cam) {
         prof give_me_a_name(__PROFILE_FUNC__);
         sceneData->viewProjection = cam.viewProjection;
@@ -280,6 +308,9 @@ struct Renderer {
         textureShader->bind();
         textureShader->uploadUniformMat4("viewProjection",
                                          sceneData->viewProjection);
+
+        auto lineShader = sceneData->shaderLibrary.get("line");
+        lineShader->bind();
 
         start_batch();
     }
@@ -296,7 +327,7 @@ struct Renderer {
         sceneData->qvbufferptr = sceneData->qvbufferstart;
         sceneData->nextTexSlot = 1;
 
-        sceneData->lineVertexCount = 0;
+        sceneData->lineIndexCount = 0;
         sceneData->lvbufferptr = sceneData->lvbufferstart;
     }
 
@@ -320,16 +351,14 @@ struct Renderer {
             stats.drawCalls++;
         }
 
-        if (sceneData->lineVertexCount) {
+        if (sceneData->lineIndexCount) {
             uint32_t dataSize = (uint32_t)((uint8_t*)sceneData->lvbufferptr -
                                            (uint8_t*)sceneData->lvbufferstart);
             sceneData->lineVB->setData(sceneData->lvbufferstart, dataSize);
             sceneData->shaderLibrary.get("line")->bind();
-            drawLines(sceneData->lineVA, sceneData->lineVertexCount);
+            draw(sceneData->lineVA, sceneData->lineIndexCount);
             stats.drawCalls++;
         }
-
-        //
     }
 
     static void drawQuad(const glm::mat4& transform, const glm::vec4& color,
@@ -407,20 +436,77 @@ struct Renderer {
     }
 
     static void drawLine(const glm::vec3& start, const glm::vec3& end,
-                         const glm::vec4& color) {
-        sceneData->lvbufferptr->position = start;
+                         float thickness = 1.f,
+                         const glm::vec4& color = glm::vec4{1}) {
+        //
+        if (sceneData->lineIndexCount >= sceneData->MAX_LINE_INDICES)
+            next_batch();
+
+        // world to clip
+        glm::vec4 clipI = glm::vec4(start.x, start.y, start.z, 1.0f);
+        glm::vec4 clipJ = glm::vec4(end.x, end.y, end.z, 1.0f);
+
+        // clip to pixel
+        glm::vec2 pixeli, pixelj;
+        pixeli.x = 0.5f * (float)sceneData->width * (clipI.x / clipI.w + 1.0f);
+        pixeli.y = 0.5f * (float)sceneData->height * (1.0f - clipI.y / clipI.w);
+        pixelj.x = 0.5f * (float)sceneData->width * (clipJ.x / clipJ.w + 1.0f);
+        pixelj.y = 0.5f * (float)sceneData->height * (1.0f - clipJ.y / clipJ.w);
+
+        glm::vec2 dir = {pixelj.x - pixeli.x, pixelj.y - pixeli.y};
+        float linelength = glm::length(dir);
+
+        if (linelength < 1e-10) return;
+
+        dir /= linelength;
+        glm::vec2 normal = {-dir.y, +dir.x};
+
+        float d = 0.5f * thickness;
+
+        float dOverwidth = d / (float)sceneData->width;
+        float dOverHeight = d / (float)sceneData->height;
+
+        glm::vec4 offset(0.0f);
+
+        offset.x = (-dir.x + normal.x) * dOverwidth;
+        offset.y = (+dir.y - normal.y) * dOverHeight;
+        sceneData->lvbufferptr->clipcrd = clipI + offset;
         sceneData->lvbufferptr->color = color;
+        sceneData->lvbufferptr->texcoord = {-d, +d};
+        sceneData->lvbufferptr->width = 2 * d;
+        sceneData->lvbufferptr->length = linelength;
         sceneData->lvbufferptr++;
 
-        sceneData->lvbufferptr->position = end;
+        offset.x = (+dir.x + normal.x) * dOverwidth;
+        offset.y = (-dir.y - normal.y) * dOverHeight;
+        sceneData->lvbufferptr->clipcrd = clipJ + offset;
         sceneData->lvbufferptr->color = color;
+        sceneData->lvbufferptr->texcoord = {linelength + d, +d};
+        sceneData->lvbufferptr->width = 2 * d;
+        sceneData->lvbufferptr->length = linelength;
         sceneData->lvbufferptr++;
 
-        sceneData->lineVertexCount += 2;
+        offset.x = (+dir.x - normal.x) * dOverwidth;
+        offset.y = (-dir.y + normal.y) * dOverHeight;
+        sceneData->lvbufferptr->clipcrd = clipJ + offset;
+        sceneData->lvbufferptr->color = color;
+        sceneData->lvbufferptr->texcoord = {linelength + d, -d};
+        sceneData->lvbufferptr->width = 2 * d;
+        sceneData->lvbufferptr->length = linelength;
+        sceneData->lvbufferptr++;
 
-        // if (sceneData->lineVertexCount >= sceneData->MAX_IND) {
-        // next_batch();
-        // }
+        offset.x = (-dir.x - normal.x) * dOverwidth;
+        offset.y = (+dir.y + normal.y) * dOverHeight;
+        sceneData->lvbufferptr->clipcrd = clipI + offset;
+        sceneData->lvbufferptr->color = color;
+        sceneData->lvbufferptr->texcoord = {-d, -d};
+        sceneData->lvbufferptr->width = 2 * d;
+        sceneData->lvbufferptr->length = linelength;
+        sceneData->lvbufferptr++;
+
+        sceneData->lineIndexCount += 6;
+
+        stats.quadCount++;
     }
 
     static void setLineThickness(float thickness) { glLineWidth(thickness); };
@@ -430,8 +516,9 @@ struct Renderer {
     ////// ////// ////// ////// ////// ////// ////// //////
 
     static void drawLine(const glm::vec2& start, const glm::vec2& end,
-                         const glm::vec4& color) {
-        Renderer::drawLine(glm::vec3{start, 0.f}, glm::vec3{end, 0.f}, color);
+                         float thickness, const glm::vec4& color) {
+        Renderer::drawLine(glm::vec3{start, 0.f}, glm::vec3{end, 0.f},
+                           thickness, color);
     }
 
     static void drawQuad(const glm::vec2& position, const glm::vec2& size,

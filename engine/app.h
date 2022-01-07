@@ -63,7 +63,7 @@ struct App {
 
         window->setEventCallback(M_BIND(onEvent));
 
-        Renderer::init();
+        Renderer::init(settings.width, settings.height);
     }
 
     ~App() { Key::export_keys(); }

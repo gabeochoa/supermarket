@@ -274,7 +274,7 @@ struct SuperLayer : public Layer {
     virtual void onDetach() override {}
 
     void child_updates(Time dt) {
-        if (GLOBALS.get<bool>("terminal_closed")) {
+        if (GLOBALS.get_or_default<bool>("terminal_closed", true)) {
             cameraController->onUpdate(dt);
         }
 
@@ -288,14 +288,23 @@ struct SuperLayer : public Layer {
     void render() {
         Renderer::begin(cameraController->camera);
         // should go underneath entities also
-        dragArea->render_selected();
+        // dragArea->render_selected();
+        //
+        // for (auto& entity : entities) {
+        // entity->render();
+        // }
+        //
+        // // render above items
+        // dragArea->render();
 
-        for (auto& entity : entities) {
-            entity->render();
+        for (int i = 0; i < 360; i += 10) {
+            Renderer::drawLine(glm::vec3{0.f, 0.f, 0.f},
+                               glm::vec2{
+                                   sin(glm::radians(1.f * i)),
+                                   cos(glm::radians(1.f * i)),
+                               },
+                               1.f, glm::vec4{1, 1, 1, 1});
         }
-
-        // render above items
-        dragArea->render();
 
         Renderer::end();
     }
