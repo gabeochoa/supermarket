@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     // TODO integrate into gameUI layer
     Layer* jobLayer = new JobLayer();
     App::get().pushLayer(jobLayer);
-    //
+
     Layer* super = new SuperLayer();
     App::get().pushLayer(super);
 

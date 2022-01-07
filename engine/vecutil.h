@@ -55,6 +55,15 @@ inline glm::vec2 round_higher(glm::vec2 val) {
     return glm::vec2{round_higher(val.x), round_higher(val.y)};
 }
 
+template <>
+inline glm::vec2 round_lower(glm::vec2 val) {
+    return glm::vec2{round_lower(val.x), round_lower(val.y)};
+}
+
+inline glm::vec2 round(glm::vec2 val) {
+    return glm::vec2{std::round(val.x), std::round(val.y)};
+}
+
 inline glm::vec4 posSizeToRect(glm::vec2 pos, glm::vec2 size) {
     return glm::vec4{pos.x, pos.y, pos.x + size.x, pos.y + size.y};
 }

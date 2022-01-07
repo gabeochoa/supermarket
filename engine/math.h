@@ -17,3 +17,13 @@ T round_higher(T val) {
     return ceil(val);
 }
 
+// This rounds to the lower number maintaining the sign
+// for negative this means higher, for pos this means lower
+template <typename T>
+T round_lower(T val) {
+    int sign = sgn<T>(val);
+    if (sign < 0) {
+        return ceil(val);
+    }
+    return floor(val);
+}
