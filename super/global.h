@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../engine/camera.h"
+#include "../vendor/supermarket-engine/engine/camera.h"
 
 constexpr int WIN_W = 1920;
 constexpr int WIN_H = 1080;

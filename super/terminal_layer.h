@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "../engine/camera.h"
-#include "../engine/layer.h"
-#include "../engine/pch.hpp"
-#include "../engine/time.h"
-#include "../engine/ui.h"
+#include "../vendor/supermarket-engine/engine/camera.h"
+#include "../vendor/supermarket-engine/engine/layer.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/time.h"
+#include "../vendor/supermarket-engine/engine/ui.h"
 #include "global.h"
 
 struct TerminalLayer : public Layer {

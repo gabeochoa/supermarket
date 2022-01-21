@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "../engine/external_include.h"
-#include "../engine/thetastar.h"
-#include "../engine/trie.h"
+#include "../vendor/supermarket-engine/engine/external_include.h"
+#include "../vendor/supermarket-engine/engine/thetastar.h"
+#include "../vendor/supermarket-engine/engine/trie.h"
 #include "entities.h"
 #include "entity.h"
 

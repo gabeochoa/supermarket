@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "../engine/maputil.h"
-#include "../engine/pch.hpp"
-#include "../engine/thetastar.h"
+#include "../vendor/supermarket-engine/engine/maputil.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/thetastar.h"
 #include "entity.h"
 #include "item.h"
 #include "job.h"

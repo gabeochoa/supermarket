@@ -3,8 +3,8 @@
 
 #include <atomic>
 
-#include "../engine/pch.hpp"
-#include "../engine/renderer.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/renderer.h"
 #include "navmesh.h"
 
 struct Storable;

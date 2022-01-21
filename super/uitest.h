@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "../engine/app.h"
-#include "../engine/camera.h"
-#include "../engine/edit.h"
-#include "../engine/file.h"
-#include "../engine/font.h"
-#include "../engine/layer.h"
-#include "../engine/pch.hpp"
-#include "../engine/ui.h"
+#include "../vendor/supermarket-engine/engine/app.h"
+#include "../vendor/supermarket-engine/engine/camera.h"
+#include "../vendor/supermarket-engine/engine/edit.h"
+#include "../vendor/supermarket-engine/engine/file.h"
+#include "../vendor/supermarket-engine/engine/font.h"
+#include "../vendor/supermarket-engine/engine/layer.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/ui.h"
 //
 #include "global.h"
 //

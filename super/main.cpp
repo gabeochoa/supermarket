@@ -5,12 +5,12 @@
 //
 // #define SUPER_ENGINE_PROFILING_DISABLED
 
-#include "../engine/app.h"
-#include "../engine/edit.h"
-#include "../engine/file.h"
-#include "../engine/input.h"
-#include "../engine/pch.hpp"
-#include "../engine/strutil.h"
+#include "../vendor/supermarket-engine/engine/app.h"
+#include "../vendor/supermarket-engine/engine/edit.h"
+#include "../vendor/supermarket-engine/engine/file.h"
+#include "../vendor/supermarket-engine/engine/input.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/strutil.h"
 #include "custom_fmt.h"
 #include "entities.h"
 #include "job.h"

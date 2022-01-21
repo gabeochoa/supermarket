@@ -1,0 +1,3 @@
+[submodule "supermarket-engine"]
+	path = supermarket-engine
+	url = git@github.com:gabeochoa/supermarket-engine.git

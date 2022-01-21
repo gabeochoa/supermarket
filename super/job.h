@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "../engine/log.h"
-#include "../engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/log.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
 
 // Lower number means lower priority
 enum JobType {

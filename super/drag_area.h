@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "../engine/pch.hpp"
-#include "../engine/ui.h"
+#include "../vendor/supermarket-engine/engine/pch.hpp"
+#include "../vendor/supermarket-engine/engine/ui.h"
 #include "entities.h"
 #include "entity.h"
 #include "movable_entities.h"
