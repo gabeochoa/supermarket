@@ -47,6 +47,7 @@ struct GameUILayer : public Layer {
     int dropdownIndex = 0;
     FurnitureTool selectedTool;
     ItemManager* itemManager;
+    std::shared_ptr<OrthoCameraController> gameUICameraController;
 
     const float H1_FS = 64.f;
     const float P_FS = 32.f;
@@ -54,6 +55,9 @@ struct GameUILayer : public Layer {
     GameUILayer() : Layer("Game UI") {
         isMinimized = true;
         gameUICameraController.reset(new OrthoCameraController(WIN_RATIO));
+        GLOBALS.set<OrthoCameraController>("gameUICameraController",
+                                           gameUICameraController.get());
+
         gameUICameraController->setZoomLevel(20.f);
         gameUICameraController->camera.setViewport({0, 0, WIN_W, WIN_H});
         gameUICameraController->movementEnabled = false;
@@ -240,11 +244,15 @@ struct GameUILayer : public Layer {
 struct SuperLayer : public Layer {
     std::shared_ptr<DragArea> dragArea;
     glm::vec4 viewport = {0, 0, WIN_W, WIN_H};
+    std::shared_ptr<OrthoCameraController> cameraController;
 
     SuperLayer() : Layer("Supermarket") {
         isMinimized = true;
 
         cameraController.reset(new OrthoCameraController(WIN_RATIO));
+        GLOBALS.set<OrthoCameraController>("superCameraController",
+                                           cameraController.get());
+
         cameraController->camera.setViewport(viewport);
         cameraController->rotationEnabled = false;
 
@@ -462,7 +470,7 @@ struct SuperLayer : public Layer {
 
     virtual void onEvent(Event& event) override {
         if (Menu::get().state != Menu::State::Game) return;
-        // log_warn(event.toString().c_str());
+        log_warn("super onevent {}", event.toString().c_str());
         cameraController->onEvent(event);
         EventDispatcher dispatcher(event);
         dispatcher.dispatch<Mouse::MouseButtonPressedEvent>(std::bind(

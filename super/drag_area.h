@@ -131,6 +131,9 @@ struct DragArea : public Entity {
 
     virtual void render(const RenderOptions& = RenderOptions()) override {
         if (textureName == "white") {
+            // dont draw if we are 0 size 
+            if(size.x == 0 && size.y == 0)return;
+
             auto loc = position;
             if (center) {
                 loc = loc + glm::vec2{size.x / 2, size.y / 2};

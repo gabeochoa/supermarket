@@ -230,13 +230,15 @@ struct EntityDebugLayer : public Layer {
         if (Menu::get().state != Menu::State::Game) {
             return;
         }
+        auto cameraController =
+            GLOBALS.get_ptr<OrthoCameraController>("superCameraController");
         if (!cameraController) {
             // This requires the game to be loaded,
             // so just do nothing if game not existing
             return;
         }
 
-        prof(__PROFILE_FUNC__);
+        prof give_me_a_name(__PROFILE_FUNC__);
 
         gltInit();
         float scale = 0.003f;

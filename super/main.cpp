@@ -79,13 +79,13 @@ int main(int argc, char** argv) {
 
     add_globals();
 
-    app.reset(App::create({
+    App::create({
         .width = WIN_W,
         .height = WIN_H,
         .title = "SuperMarket",
         .clearEnabled = true,
         .escClosesWindow = false,
-    }));
+    });
 
     Layer* terminal = new TerminalLayer();
     App::get().pushLayer(terminal);
