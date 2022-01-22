@@ -287,7 +287,7 @@ struct UITestLayer : public Layer {
     }
 
     bool onKeyPressed(KeyPressedEvent& event) {
-        if (event.keycode == Key::mapping["Esc"]) {
+        if (event.keycode == Key::getMapping("Esc")) {
             App::get().running = false;
             return true;
         }

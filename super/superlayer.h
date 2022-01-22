@@ -448,7 +448,7 @@ struct SuperLayer : public Layer {
     }
 
     bool onKeyPressed(KeyPressedEvent& event) {
-        if (event.keycode == Key::mapping["Esc"]) {
+        if (event.keycode == Key::getMapping("Esc")) {
             Menu::get().state = Menu::State::Root;
             return true;
         }
@@ -470,7 +470,6 @@ struct SuperLayer : public Layer {
 
     virtual void onEvent(Event& event) override {
         if (Menu::get().state != Menu::State::Game) return;
-        log_warn("super onevent {}", event.toString().c_str());
         cameraController->onEvent(event);
         EventDispatcher dispatcher(event);
         dispatcher.dispatch<Mouse::MouseButtonPressedEvent>(std::bind(

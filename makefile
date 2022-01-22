@@ -35,8 +35,11 @@ windows: super
 
 # end windows
 
+engine: 
+	cd vendor/supermarket-engine
+	make
+
 super: $(OBJ_FILES)
-	rm -f ./resources/keybindings.ini
 	$(CCC) $(FLAGS) $(LIBS) $(FRAMEWORKS) -o $(EXE) ./super/main.cpp ./vendor/supermarket-engine/output/libengine.a
 	DEBUG=123 ./$(EXE)
 

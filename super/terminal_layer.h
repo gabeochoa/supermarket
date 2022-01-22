@@ -114,11 +114,11 @@ struct TerminalLayer : public Layer {
 
     bool onKeyPressed(KeyPressedEvent event) {
         if (isMinimized == false &&
-            event.keycode == Key::mapping["Exit Debugger"]) {
+            event.keycode == Key::getMapping("Exit Debugger")) {
             isMinimized = true;
             return true;
         }
-        if (event.keycode == Key::mapping["Toggle Debugger"]) {
+        if (event.keycode == Key::getMapping("Toggle Debugger")) {
             isMinimized = !isMinimized;
             drawerPctOpen = 0.f;
             return true;

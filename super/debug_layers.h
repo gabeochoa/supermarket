@@ -183,14 +183,14 @@ struct ProfileLayer : public Layer {
     }
 
     bool onKeyPressed(KeyPressedEvent event) {
-        if (event.keycode == Key::mapping["Open Profiler"]) {
+        if (event.keycode == Key::getMapping("Open Profiler")) {
             isMinimized = !isMinimized;
         }
 
-        if (event.keycode == Key::mapping["Profiler Hide Filenames"]) {
+        if (event.keycode == Key::getMapping("Profiler Hide Filenames")) {
             showFilenames = !showFilenames;
         }
-        if (event.keycode == Key::mapping["Profiler Clear Stats"]) {
+        if (event.keycode == Key::getMapping("Profiler Clear Stats")) {
             profiler__DO_NOT_USE._acc.clear();
         }
         // log_info(std::to_string(event.keycode));
@@ -314,7 +314,7 @@ struct EntityDebugLayer : public Layer {
     }
 
     bool onKeyPressed(KeyPressedEvent event) {
-        if (event.keycode == Key::mapping["Show Entity Overlay"]) {
+        if (event.keycode == Key::getMapping("Show Entity Overlay")) {
             isMinimized = !isMinimized;
         }
         return false;

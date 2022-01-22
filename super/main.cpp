@@ -87,6 +87,12 @@ int main(int argc, char** argv) {
         .escClosesWindow = false,
     });
 
+    // NOTE: Cant live in tests because app inits keyboard...
+    M_ASSERT(Key::getMapping("Up") == Key::KeyCode::W, "up should be W");
+    M_ASSERT(Key::getMapping("Down") == Key::KeyCode::S, "down should be s");
+    M_ASSERT(Key::getMapping("Left") == Key::KeyCode::A, "left should be a");
+    M_ASSERT(Key::getMapping("Right") == Key::KeyCode::D, "right should be d")
+
     Layer* terminal = new TerminalLayer();
     App::get().pushLayer(terminal);
 

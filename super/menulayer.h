@@ -122,7 +122,7 @@ struct MenuLayer : public Layer {
     }
 
     bool onKeyPressed(KeyPressedEvent& event) {
-        if (event.keycode == Key::mapping["Esc"]) {
+        if (event.keycode == Key::getMapping("Esc")) {
             if (camPosInterp.camPosIndex == 0) {
                 App::get().running = false;
             } else {
@@ -140,7 +140,7 @@ struct MenuLayer : public Layer {
                 static_cast<Key::KeyCode>(event.keycode)) == 1) {
             uicontext->key = static_cast<Key::KeyCode>(event.keycode);
         }
-        if (event.keycode == Key::mapping["Widget Mod"]) {
+        if (event.keycode == Key::getMapping("Widget Mod")) {
             uicontext->mod = static_cast<Key::KeyCode>(event.keycode);
         }
         if (uicontext->textfieldMod.count(
