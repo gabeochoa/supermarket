@@ -98,8 +98,9 @@ struct TerminalLayer : public Layer {
                 for (size_t i = 0; i < EDITOR_COMMANDS.output_history.size();
                      i++) {
                     rows.push_back([p_fs, i](WidgetConfig config) {
+                        auto content = EDITOR_COMMANDS.output_history[i];
                         config.size.x = p_fs;
-                        config.text = EDITOR_COMMANDS.output_history[i];
+                        config.text = content;
                         config.flipTextY = true;
                         text(MK_UUID_LOOP(0, i), config);
                     });
