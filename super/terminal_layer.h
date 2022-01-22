@@ -17,6 +17,7 @@ struct TerminalLayer : public Layer {
     std::wstring commandContent = L"test";
     float drawerPctOpen = 0.f;
     std::shared_ptr<IUI::UIContext> uicontext;
+    int startingHistoryIndex = 0;
 
     TerminalLayer() : Layer("Debug Terminal") {
         isMinimized = true;
@@ -32,6 +33,8 @@ struct TerminalLayer : public Layer {
 
         uicontext.reset(new IUI::UIContext());
         uicontext->init();
+
+        startingHistoryIndex = EDITOR_COMMANDS.output_history.size() - 1;
     }
 
     virtual ~TerminalLayer() {}
@@ -71,6 +74,7 @@ struct TerminalLayer : public Layer {
             uicontext->begin(terminalCameraController);
 
             float h1_fs = 64.f;
+            float p_fs = 32.f;
 
             auto drawer_location = getPositionSizeForUIRect({0, 0, WIN_W, 400});
 
@@ -81,14 +85,28 @@ struct TerminalLayer : public Layer {
                            .size = drawer_location[1],
                        }),
                        &drawerPctOpen)) {
-                auto textConfig = WidgetConfig({
-                    .color = glm::vec4{0.2, 0.7f, 0.4f, 1.0f},
-                    .position = convertUIPos({0, h1_fs + 1.f}),
-                    .size = glm::vec2{h1_fs, h1_fs},
-                    .text = "Terminal",
-                    .flipTextY = true,
+                WidgetConfig scrollViewConfig = IUI::WidgetConfig({
+                    .color = glm::vec4{0.3f, 0.9f, 0.5f, 1.f},             //
+                    .flipTextY = true,                                     //
+                    .position = convertUIPos({0, 0}),                      //
+                    .size = glm::vec2{drawer_location[1].x, p_fs * 12.f},  //
+                    .text = "",                                            //
+                    .transparent = true,                                   //
                 });
-                text(MK_UUID(id), textConfig);
+
+                std::vector<IUI::Child> rows;
+                for (size_t i = 0; i < EDITOR_COMMANDS.output_history.size();
+                     i++) {
+                    rows.push_back([p_fs, i](WidgetConfig config) {
+                        config.size.x = p_fs;
+                        config.text = EDITOR_COMMANDS.output_history[i];
+                        config.flipTextY = true;
+                        text(MK_UUID_LOOP(0, i), config);
+                    });
+                }
+
+                IUI::scroll_view(MK_UUID(id), scrollViewConfig, rows, p_fs,
+                                 &startingHistoryIndex);
 
                 uicontext->kbFocusID = command_field_id;
                 auto cfsize = glm::vec2{drawer_location[1].x, h1_fs};
@@ -104,6 +122,8 @@ struct TerminalLayer : public Layer {
                                  commandContent)) {
                     log_info("command field: {}",
                              EDITOR_COMMANDS.command_history.back());
+                    startingHistoryIndex =
+                        EDITOR_COMMANDS.output_history.size() - 1;
                 }
 
             }  // end drawer
@@ -138,11 +158,13 @@ struct TerminalLayer : public Layer {
 
     virtual void onEvent(Event& event) override {
         EventDispatcher dispatcher(event);
-        terminalCameraController->onEvent(event);
+        // terminalCameraController->onEvent(event);
         dispatcher.dispatch<KeyPressedEvent>(std::bind(
             &TerminalLayer::onKeyPressed, this, std::placeholders::_1));
         if (isMinimized) return;
         dispatcher.dispatch<CharPressedEvent>(uicontext->getCharPressHandler());
+        dispatcher.dispatch<Mouse::MouseScrolledEvent>(
+            uicontext->getOnMouseScrolledHandler());
     }
 };
 
