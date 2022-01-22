@@ -21,7 +21,6 @@ constexpr bool IS_DEBUG = true;
 // and reload it instead of having to have multiple
 static std::shared_ptr<OrthoCameraController> menuCameraController;
 static std::shared_ptr<OrthoCameraController> uiTestCameraController;
-static std::shared_ptr<OrthoCameraController> terminalCameraController;
 
 struct SetMenuCommand : Command<Menu> {
     std::vector<std::any> convert(const std::vector<std::string>& tokens) {

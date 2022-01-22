@@ -10,6 +10,8 @@
 #include "../vendor/supermarket-engine/engine/input.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/strutil.h"
+#include "../vendor/supermarket-engine/engine/terminal_layer.h"
+#include "../vendor/supermarket-engine/engine/fps_layer.h"
 #include "custom_fmt.h"
 #include "entities.h"
 #include "job.h"
@@ -23,7 +25,6 @@
 #include "debug_layers.h"
 #include "menulayer.h"
 #include "superlayer.h"
-#include "terminal_layer.h"
 #include "tests.h"
 #include "uitest.h"
 
