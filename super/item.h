@@ -1,12 +1,11 @@
 #pragma once
 
 #include "../vendor/supermarket-engine/engine/edit.h"
+#include "../vendor/supermarket-engine/engine/entity.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/renderer.h"
 //
 #include <memory>
-
-#include "entity.h"
 
 struct Item {
     const char* name;

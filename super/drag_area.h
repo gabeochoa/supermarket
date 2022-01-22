@@ -1,10 +1,9 @@
 
 #pragma once
 
+#include "../vendor/supermarket-engine/engine/entity.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/ui.h"
-#include "entities.h"
-#include "entity.h"
 #include "movable_entities.h"
 
 struct DragArea : public Entity {
@@ -131,8 +130,8 @@ struct DragArea : public Entity {
 
     virtual void render(const RenderOptions& = RenderOptions()) override {
         if (textureName == "white") {
-            // dont draw if we are 0 size 
-            if(size.x == 0 && size.y == 0)return;
+            // dont draw if we are 0 size
+            if (size.x == 0 && size.y == 0) return;
 
             auto loc = position;
             if (center) {

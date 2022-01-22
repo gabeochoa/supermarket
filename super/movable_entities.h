@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include "../vendor/supermarket-engine/engine/entity.h"
 #include "../vendor/supermarket-engine/engine/maputil.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/thetastar.h"
-#include "entity.h"
 #include "item.h"
 #include "job.h"
 

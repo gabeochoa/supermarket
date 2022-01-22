@@ -3,6 +3,7 @@
 
 #include "../vendor/supermarket-engine/engine/edit.h"
 #include "../vendor/supermarket-engine/engine/layer.h"
+#include "../vendor/supermarket-engine/engine/navmesh.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/renderer.h"
 #include "../vendor/supermarket-engine/engine/time.h"
@@ -10,7 +11,6 @@
 #include "global.h"
 #include "job.h"
 #include "menu.h"
-#include "navmesh.h"
 
 inline GLTtext* drawText(const std::string& content, int x, int y,
                          float scale) {

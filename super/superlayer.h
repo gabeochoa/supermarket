@@ -3,6 +3,7 @@
 
 #include "../vendor/supermarket-engine/engine/camera.h"
 #include "../vendor/supermarket-engine/engine/layer.h"
+#include "../vendor/supermarket-engine/engine/navmesh.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/renderer.h"
 //
@@ -14,7 +15,6 @@
 #include "entities.h"
 #include "job.h"
 #include "menu.h"
-#include "navmesh.h"
 
 //
 

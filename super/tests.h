@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include "../vendor/supermarket-engine/engine/entity.h"
 #include "../vendor/supermarket-engine/engine/external_include.h"
 #include "../vendor/supermarket-engine/engine/thetastar.h"
 #include "../vendor/supermarket-engine/engine/trie.h"
 #include "entities.h"
-#include "entity.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

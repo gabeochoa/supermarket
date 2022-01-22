@@ -2,7 +2,7 @@
 #pragma once
 
 #include "../vendor/supermarket-engine/engine/pch.hpp"
-#include "entity.h"
+#include "../vendor/supermarket-engine/engine/entity.h"
 
 struct Billboard : public Entity {
     // Billboard is a textured ent that never moves
