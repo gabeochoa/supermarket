@@ -26,6 +26,7 @@ struct UITestLayer : public Layer {
     int buttonListIndex = 0;
     float upperCaseRotation = 0.f;
     bool camHasMovement = false;
+    bool camHasZoom = false;
     std::wstring commandContent;
 
     std::shared_ptr<Billboard> billy;
@@ -38,6 +39,7 @@ struct UITestLayer : public Layer {
             new OrthoCameraController(WIN_RATIO, 10.f, 5.f, 0.f));
         uiTestCameraController->camera.setPosition(glm::vec3{15.f, 0.f, 0.f});
         camHasMovement = uiTestCameraController->movementEnabled;
+        camHasZoom = uiTestCameraController->zoomEnabled;
 
         uiTestCameraController->camera.setViewport(
             glm::vec4{0, 0, WIN_W, WIN_H});
@@ -265,7 +267,7 @@ struct UITestLayer : public Layer {
 
             WidgetConfig buttonListConfig = IUI::WidgetConfig({
                 .color = glm::vec4{0.3f, 0.9f, 0.5f, 1.f},  //
-                .position = glm::vec2{22.f, 3.f},           //
+                .position = glm::vec2{22.f, 6.f},           //
                 .size = glm::vec2{8.5f, 1.f},               //
                 .text = "",                                 //
                 .transparent = false,                       //
@@ -273,6 +275,40 @@ struct UITestLayer : public Layer {
 
             IUI::button_list(IUI::MK_UUID(id), buttonListConfig,
                              buttonListConfigs, &buttonListIndex);
+        }
+
+        const uuid scroll_view_id = IUI::MK_UUID(id);
+        {
+            WidgetConfig scrollViewConfig = IUI::WidgetConfig({
+                .color = glm::vec4{0.3f, 0.9f, 0.5f, 1.f},  //
+                .position = glm::vec2{22.f, -3.f},          //
+                .size = glm::vec2{8.5f, 4.f},               //
+                .text = "",                                 //
+                .transparent = false,                       //
+            });
+
+            std::vector<IUI::Child> rows;
+            for (int i = 0; i < 10; i++) {
+                rows.push_back([i](WidgetConfig config) {
+                    config.size.x = 1.f;
+                    config.text = fmt::format("row{}", i),
+                    IUI::text(
+                        // text doesnt need ids really
+                        IUI::MK_UUID_LOOP(0, i), config);
+                });
+            }
+
+            IUI::scroll_view(scroll_view_id, scrollViewConfig, rows, 1.f);
+        }
+
+        // In this case we want to lock the camera when typing in
+        // this specific textfield
+        // TODO should this be the default?
+        // TODO should this live in the textFieldConfig?
+        uiTestCameraController->zoomEnabled = camHasZoom;
+        if (uiTestCameraController->zoomEnabled &&
+            ui_context->hotID == scroll_view_id) {
+            uiTestCameraController->zoomEnabled = false;
         }
 
         ui_context->end();
@@ -312,5 +348,8 @@ struct UITestLayer : public Layer {
             std::bind(&UITestLayer::onKeyPressed, this, std::placeholders::_1));
         dispatcher.dispatch<CharPressedEvent>(
             ui_context->getCharPressHandler());
+
+        dispatcher.dispatch<Mouse::MouseScrolledEvent>(
+            ui_context->getOnMouseScrolledHandler());
     }
 };
