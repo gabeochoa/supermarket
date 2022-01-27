@@ -84,19 +84,19 @@ struct UITestLayer : public Layer {
         using namespace IUI;
         ui_context->begin(uiTestCameraController);
 
-        if (button(MK_UUID(id), WidgetConfig({.position = glm::vec2{0.f, 0.f},
+        if (button(MK_UUID(id, rootID), WidgetConfig({.position = glm::vec2{0.f, 0.f},
                                               .size = glm::vec2{2.f, 1.f}}))) {
             log_info("clicked button");
             Menu::get().state = Menu::State::Root;
         }
 
-        if (button(MK_UUID(id), WidgetConfig({.position = glm::vec2{3.f, -2.f},
+        if (button(MK_UUID(id, rootID), WidgetConfig({.position = glm::vec2{3.f, -2.f},
                                               .size = glm::vec2{6.f, 1.f},
                                               .text = "open file dialog"}))) {
             auto files = getFilesFromUser();
             for (auto file : files) log_info("You chose the file: {}", file);
         }
-        if (button(MK_UUID(id), WidgetConfig({.position = glm::vec2{2.5f, 0.f},
+        if (button(MK_UUID(id, rootID), WidgetConfig({.position = glm::vec2{2.5f, 0.f},
                                               .size = glm::vec2{6.f, 1.f},
                                               .text = "open mesage box"}))) {
             auto result =
@@ -105,7 +105,7 @@ struct UITestLayer : public Layer {
             log_info("they clicked: {}", str);
         }
 
-        if (slider(MK_UUID(id),
+        if (slider(MK_UUID(id, rootID),
                    WidgetConfig({
                        .position = glm::vec2{9.f, 0.f},
                        .size = glm::vec2{1.f, 3.f},
@@ -115,7 +115,7 @@ struct UITestLayer : public Layer {
             // log_info("idk moved slider? ");
         }
 
-        if (slider(MK_UUID(id),
+        if (slider(MK_UUID(id, rootID),
                    WidgetConfig({
                        .position = glm::vec2{11.f, 3.f},
                        .size = glm::vec2{3.f, 1.f},
@@ -168,14 +168,14 @@ struct UITestLayer : public Layer {
             .text = "Kanji: \xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e",
         });
 
-        text(MK_UUID(id), upperCaseConfig);
-        text(MK_UUID(id), lowerCaseConfig);
-        text(MK_UUID(id), numbersConfig);
-        text(MK_UUID(id), extrasConfig);
-        text(MK_UUID(id), hiraganaConfig);
-        text(MK_UUID(id), kanjiConfig);
+        text(MK_UUID(id, IUI::rootID), upperCaseConfig);
+        text(MK_UUID(id, IUI::rootID), lowerCaseConfig);
+        text(MK_UUID(id, IUI::rootID), numbersConfig);
+        text(MK_UUID(id, IUI::rootID), extrasConfig);
+        text(MK_UUID(id, IUI::rootID), hiraganaConfig);
+        text(MK_UUID(id, IUI::rootID), kanjiConfig);
 
-        uuid textFieldID = MK_UUID(id);
+        uuid textFieldID = MK_UUID(id, IUI::rootID);
         if (textfield(textFieldID,
                       WidgetConfig({.position = glm::vec2{2.f, 2.f},
                                     .size = glm::vec2{6.f, 1.f}}),
@@ -183,7 +183,7 @@ struct UITestLayer : public Layer {
             log_info("{}", to_string(content));
         }
 
-        uuid commandFieldID = MK_UUID(id);
+        uuid commandFieldID = MK_UUID(id, IUI::rootID);
         if (commandfield(commandFieldID,
                          WidgetConfig({.position = glm::vec2{2.f, 4.f},
                                        .size = glm::vec2{6.f, 1.f}}),
@@ -209,7 +209,7 @@ struct UITestLayer : public Layer {
         });
 
         if (IUI::button_with_label(
-                IUI::MK_UUID(id),
+                IUI::MK_UUID(id, IUI::rootID),
                 IUI::WidgetConfig({
                     .child = &tapToContiueText,                 //
                     .color = glm::vec4{0.3f, 0.9f, 0.5f, 1.f},  //
@@ -222,7 +222,7 @@ struct UITestLayer : public Layer {
         }
 
         if (IUI::checkbox(         //
-                IUI::MK_UUID(id),  //
+                IUI::MK_UUID(id, IUI::rootID),  //
                 IUI::WidgetConfig({
                     .color = glm::vec4{0.6f, 0.3f, 0.3f, 1.f},  //
                     .position = glm::vec2{16.f, 3.f},           //
@@ -250,7 +250,7 @@ struct UITestLayer : public Layer {
                 .transparent = false,                       //
             });
 
-            if (IUI::dropdown(IUI::MK_UUID(id), dropdownMain, dropdownConfigs,
+            if (IUI::dropdown(IUI::MK_UUID(id, IUI::rootID), dropdownMain, dropdownConfigs,
                               &dropdownState, &dropdownIndex)) {
                 log_info("dropdown selected {}",
                          dropdownConfigs[dropdownIndex].text);
@@ -273,11 +273,11 @@ struct UITestLayer : public Layer {
                 .transparent = false,                       //
             });
 
-            IUI::button_list(IUI::MK_UUID(id), buttonListConfig,
+            IUI::button_list(IUI::MK_UUID(id, IUI::rootID), buttonListConfig,
                              buttonListConfigs, &buttonListIndex);
         }
 
-        const uuid scroll_view_id = IUI::MK_UUID(id);
+        const uuid scroll_view_id = IUI::MK_UUID(id, IUI::rootID);
         {
             WidgetConfig scrollViewConfig = IUI::WidgetConfig({
                 .color = glm::vec4{0.3f, 0.9f, 0.5f, 1.f},  //
@@ -294,7 +294,7 @@ struct UITestLayer : public Layer {
                     config.text = fmt::format("row{}", i),
                     IUI::text(
                         // text doesnt need ids really
-                        IUI::MK_UUID_LOOP(0, i), config);
+                        IUI::MK_UUID_LOOP(0, 0, i), config);
                 });
             }
 

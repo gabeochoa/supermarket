@@ -241,7 +241,7 @@ struct MenuLayer : public Layer {
             .transparent = true,            //
         });
 
-        if (IUI::button_with_label(IUI::MK_UUID(id), buttonConfig)) {
+        if (IUI::button_with_label(IUI::MK_UUID(id, IUI::rootID), buttonConfig)) {
             camPosInterp.set(1);
         }
     }
@@ -267,7 +267,7 @@ struct MenuLayer : public Layer {
                 .transparent = false,                         //
             });
 
-            if (IUI::button_with_label(IUI::MK_UUID(id), buttonConfig)) {
+            if (IUI::button_with_label(IUI::MK_UUID(id, IUI::rootID), buttonConfig)) {
                 Menu::get().state = Menu::State::Game;
             }
         }
@@ -288,7 +288,7 @@ struct MenuLayer : public Layer {
                 .texture = "white",                           //
             });
 
-            if (IUI::button_with_label(IUI::MK_UUID(id), buttonConfig)) {
+            if (IUI::button_with_label(IUI::MK_UUID(id, IUI::rootID), buttonConfig)) {
                 camPosInterp.set(2);
             }
         }
@@ -315,7 +315,7 @@ struct MenuLayer : public Layer {
                 .transparent = false,                         //
             });
 
-            if (IUI::button_with_label(IUI::MK_UUID(id), buttonConfig)) {
+            if (IUI::button_with_label(IUI::MK_UUID(id, IUI::rootID), buttonConfig)) {
             }
         }
     }

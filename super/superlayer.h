@@ -6,6 +6,7 @@
 #include "../vendor/supermarket-engine/engine/navmesh.h"
 #include "../vendor/supermarket-engine/engine/pch.hpp"
 #include "../vendor/supermarket-engine/engine/renderer.h"
+#include "../vendor/supermarket-engine/engine/ui.h"
 //
 #include "global.h"
 //
@@ -133,7 +134,7 @@ struct GameUILayer : public Layer {
             .text = "+",
         });
 
-        if (button_with_label(MK_UUID_LOOP(id, index), plusButtonConfig)) {
+        if (button_with_label(MK_UUID_LOOP(id, IUI::rootID, index), plusButtonConfig)) {
             // TODO should we have a max price
             float MAX_ITEM_PRICE = 10.f;
             itemManager->update_price(item_id,
@@ -149,14 +150,14 @@ struct GameUILayer : public Layer {
             .text = "-",
         });
 
-        if (button_with_label(MK_UUID_LOOP(id, index), minusButtonConfig)) {
+        if (button_with_label(MK_UUID_LOOP(id, IUI::rootID, index), minusButtonConfig)) {
             // TODO where should this live
             float MIN_ITEM_PRICE = 0.f;
             itemManager->update_price(item_id,
                                       fmax(item->price - 0.1, MIN_ITEM_PRICE));
         }
 
-        text(MK_UUID_LOOP(id, index),
+        text(MK_UUID_LOOP(id, 0, index),
              WidgetConfig({
                  .position = convertUIPos(plusButtonPosition_raw +
                                           glm::vec2{P_FS * 3, P_FS}),
@@ -176,7 +177,7 @@ struct GameUILayer : public Layer {
         std::vector<std::function<bool(uuid)>> children;
 
         auto window_location = getPositionSizeForUIRect({0, 100, 500, 500});
-        uuid window_id = MK_UUID(id);
+        uuid window_id = MK_UUID(id, IUI::rootID);
         if (window(window_id, WidgetConfig({
                                   .color = blue,
                                   .position = window_location[0],
@@ -190,7 +191,7 @@ struct GameUILayer : public Layer {
                 .text = "Inventory",
                 .flipTextY = true,
             });
-            text(MK_UUID(id), textConfig);
+            text(MK_UUID(id, IUI::rootID), textConfig);
 
             // TODO replace with list view when exists
             int i = 0;
@@ -212,7 +213,7 @@ struct GameUILayer : public Layer {
             .flipTextY = true,
         });
 
-        if (dropdown(MK_UUID(id), dropdownMain, dropdownConfigs, &dropdownState,
+        if (dropdown(MK_UUID(id, IUI::rootID), dropdownMain, dropdownConfigs, &dropdownState,
                      &dropdownIndex)) {
         }
 
