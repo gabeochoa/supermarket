@@ -99,12 +99,14 @@ struct GameUILayer : public Layer {
             for (auto kv : s->contents) {
                 ig.addItem(kv.first, kv.second);
             }
+            return EntityHelper::ForEachFlow::None;
         });
 
         EntityHelper::forEach<Employee>([&](auto emp) {
             for (auto kv : emp->inventory) {
                 ig.addItem(kv.first, kv.second);
             }
+            return EntityHelper::ForEachFlow::None;
         });
         return ig;
     }
@@ -346,6 +348,7 @@ struct SuperLayer : public Layer {
 
         EntityHelper::forEachEntity([&](auto entity) {  //
             entity->onUpdate(dt);
+            return EntityHelper::ForEachFlow::None;
         });
 
         dragArea->onUpdate(dt);
@@ -358,6 +361,7 @@ struct SuperLayer : public Layer {
 
         EntityHelper::forEachEntity([&](auto entity) {  //
             entity->render();
+            return EntityHelper::ForEachFlow::None;
         });
 
         // render above items
@@ -400,6 +404,7 @@ struct SuperLayer : public Layer {
                 };
                 JobQueue::addJob(JobType::Fill, std::make_shared<Job>(j));
             }
+            return EntityHelper::ForEachFlow::None;
         });
     }
 

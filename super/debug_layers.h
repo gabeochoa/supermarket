@@ -232,6 +232,7 @@ struct EntityDebugLayer : public Layer {
             if (m && !m->path.empty()) {
                 movables.push_back(m);
             }
+            return EntityHelper::ForEachFlow::None;
         });
 
         gltEndDraw();
@@ -258,6 +259,7 @@ struct EntityDebugLayer : public Layer {
             node->render();
             node->position = d;
             node->render();
+            return EntityHelper::ForEachFlow::None;
         });
 
         for (auto& m : movables) {
