@@ -143,12 +143,13 @@ struct ProfileLayer : public Layer {
         if (event.keycode == Key::getMapping("Open Profiler")) {
             isMinimized = !isMinimized;
         }
-
-        if (event.keycode == Key::getMapping("Profiler Hide Filenames")) {
-            showFilenames = !showFilenames;
-        }
-        if (event.keycode == Key::getMapping("Profiler Clear Stats")) {
-            profiler__DO_NOT_USE._acc.clear();
+        if (!isMinimized) {
+            if (event.keycode == Key::getMapping("Profiler Hide Filenames")) {
+                showFilenames = !showFilenames;
+            }
+            if (event.keycode == Key::getMapping("Profiler Clear Stats")) {
+                profiler__DO_NOT_USE._acc.clear();
+            }
         }
         // log_info(std::to_string(event.keycode));
         return false;
