@@ -84,21 +84,24 @@ struct UITestLayer : public Layer {
         using namespace IUI;
         ui_context->begin(uiTestCameraController);
 
-        if (button(MK_UUID(id, rootID), WidgetConfig({.position = glm::vec2{0.f, 0.f},
-                                              .size = glm::vec2{2.f, 1.f}}))) {
+        if (button(MK_UUID(id, rootID),
+                   WidgetConfig({.position = glm::vec2{0.f, 0.f},
+                                 .size = glm::vec2{2.f, 1.f}}))) {
             log_info("clicked button");
             Menu::get().state = Menu::State::Root;
         }
 
-        if (button(MK_UUID(id, rootID), WidgetConfig({.position = glm::vec2{3.f, -2.f},
-                                              .size = glm::vec2{6.f, 1.f},
-                                              .text = "open file dialog"}))) {
+        if (button(MK_UUID(id, rootID),
+                   WidgetConfig({.position = glm::vec2{3.f, -2.f},
+                                 .size = glm::vec2{6.f, 1.f},
+                                 .text = "open file dialog"}))) {
             auto files = getFilesFromUser();
             for (auto file : files) log_info("You chose the file: {}", file);
         }
-        if (button(MK_UUID(id, rootID), WidgetConfig({.position = glm::vec2{2.5f, 0.f},
-                                              .size = glm::vec2{6.f, 1.f},
-                                              .text = "open mesage box"}))) {
+        if (button(MK_UUID(id, rootID),
+                   WidgetConfig({.position = glm::vec2{2.5f, 0.f},
+                                 .size = glm::vec2{6.f, 1.f},
+                                 .text = "open mesage box"}))) {
             auto result =
                 openMessage("Example", "This is an example message box");
             auto str = (result == 0 ? "cancel" : (result == 1 ? "yes" : "no"));
@@ -221,7 +224,7 @@ struct UITestLayer : public Layer {
             Menu::get().state = Menu::State::UITest;
         }
 
-        if (IUI::checkbox(         //
+        if (IUI::checkbox(                      //
                 IUI::MK_UUID(id, IUI::rootID),  //
                 IUI::WidgetConfig({
                     .color = glm::vec4{0.6f, 0.3f, 0.3f, 1.f},  //
@@ -250,8 +253,9 @@ struct UITestLayer : public Layer {
                 .transparent = false,                       //
             });
 
-            if (IUI::dropdown(IUI::MK_UUID(id, IUI::rootID), dropdownMain, dropdownConfigs,
-                              &dropdownState, &dropdownIndex)) {
+            if (IUI::dropdown(IUI::MK_UUID(id, IUI::rootID), dropdownMain,
+                              dropdownConfigs, &dropdownState,
+                              &dropdownIndex)) {
                 log_info("dropdown selected {}",
                          dropdownConfigs[dropdownIndex].text);
             }
@@ -273,8 +277,11 @@ struct UITestLayer : public Layer {
                 .transparent = false,                       //
             });
 
-            IUI::button_list(IUI::MK_UUID(id, IUI::rootID), buttonListConfig,
-                             buttonListConfigs, &buttonListIndex);
+            if (IUI::button_list(IUI::MK_UUID(id, IUI::rootID),
+                                 buttonListConfig, buttonListConfigs,
+                                 &buttonListIndex)) {
+                log_info("button in list {} pressed", buttonListIndex);
+            }
         }
 
         const uuid scroll_view_id = IUI::MK_UUID(id, IUI::rootID);
